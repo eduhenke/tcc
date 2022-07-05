@@ -1,0 +1,91 @@
+\documentclass[embeddedlogo]{ufsc-thesis-rn46-2019}
+
+\usepackage[T1]{fontenc} % fontes
+\usepackage[utf8]{inputenc} % UTF-8
+\usepackage{lipsum} % Gerador de texto
+\usepackage{pdfpages} % Inclui PDF externo (ficha catalográfica)
+
+% Usado para mostrar código
+% \usepackage{minted}
+% \newmintinline[mt]{latex}{fontsize=\normalsize}
+% \newmintinline[mft]{latex}{fontsize=\footnotesize}
+% \setminted{fontsize=\tiny,linenos,xleftmargin=2em}
+% \setmintedinline{breaklines,breakbytokenanywhere}
+
+% Usado para mostrar comandos latex nesse guia:
+\newcommand{\lacmd}[1]{\texttt{\textbackslash{}#1}}
+\newcommand{\laenv}[1]{\texttt{\textbackslash{}begin\{#1\}...\textbackslash{}end\{#1\}}}
+\newcommand{\laenvi}[2]{\texttt{\textbackslash{}begin\{#1\}[#2]...\textbackslash{}end\{#1\}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Configurações da classe (dados do trabalho)                  %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Informações para capa e folha de rosto/certificacao
+
+% Caso o título contenha alguma porção LaTeX ilegível, defina um título
+% alternativo opcional com []'s para ser usado no campo Title do PDF
+% IMPORTANTE: Os títulos deveriam ser iguais. Apenas use um título
+% alternativo se o título não puder ser expresso com letras e números
+\titulo[Template \LaTeX{} com metadados]%
+       {Template \LaTeX{} seguindo a RN 46/2019/CPG da UFSC}
+
+\autor{Omar Ravenhurst}
+\data{1 de agosto de 2019} % ou \today
+\instituicao{Universidade Federal de Santa Catarina}
+\centro{Centro Tecnológico}
+\local{Florianópolis} % Apenas cidade! Sem estado
+\programa{Programa de Pós-Graduação em Ciência da Computação}
+% Os dois próximos itens são usados para gerar o \preambulo
+\tese % ou \dissertacao ou \tcc
+\titulode{doutor em Ciência da Computação}
+
+%%% Atenção! No caso de TCC, além de usar \tcc, outros comandos devem ser fornecidos:
+%%%
+\tcc
+\departamento{Departamento de Informática e Estatística}
+\curso{Ciência da Computação}
+\titulode{Bacharel em Ciência da Computação}
+% %% Para TCCs, orientadores e coorientadores podem ser externos, logo a
+% %% BU exige que sua afiliação seja explicitada. Por padrão, assume-se
+% %% UFSC. Você pode alterar a afiliação com os comandos abaixo:
+% \afiliacaoorientador{Universidade Federal de Santa Catarina}
+% \afiliacaocoorientador{Universidade Federal da Terra de Ninguém}
+
+% Orientador, coorientador, membros da banca e coordenador
+% As regras da BU agora exigem que Dr. apareça **depois** do nome
+% Dica: para gerar Profᵃ. use Prof\textsuperscript{a}.
+% Dica 2: para feminino use \orientadora e \coorientadora
+\orientador{Prof. Ben Trovato, Dr.}
+\coorientador{Prof. Lars Thørväld, Dr.}
+\membrabanca{Prof\textsuperscript{a}. Valerie Béranger, Dr.}{Universidade Federal de Santa Catarina}
+\membrobanca{Prof. Mordecai Malignatus, Dr.}{Universidade Federal de Santa Catarina}
+\membrobanca{Prof. Huifen Chan, Dr.}{Universidade Federal da Terra de Ninguém}
+% Dica: se feminino, \coordenadora
+\coordenador{Prof. Charles Palmer, Dr}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Principais elementos pré-textuais                            %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Inicia parte pré-textual do documento capa, folha de rosto, folha de
+% aprovação, aprovação, resumo, lista de tabelas, lista de figuras, etc.
+\pretextual%
+% \imprimircapa%
+\imprimirfolhaderosto*
+% Atenção! \cleardoublepages são inseridos automaticamente
+% Atenção! esse \protect é importante
+% \protect\incluirfichacatalografica{ficha.pdf}
+\imprimirfolhadecertificacao
+
+% Listas de "coisas". O * no final faz com que as listas não sejam 
+% incluídas como entratas do sumário (\tableofcontents)
+
+% \listoftables*
+% \listofalgorithms*
+% \listoffigures*
+% \tableofcontents*
+Hello
+
+\end{document}
