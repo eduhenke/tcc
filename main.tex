@@ -1113,37 +1113,73 @@ The project was developed in \emph{Haskell} using the \emph{Unbound} library for
 The terms are represent as a data type.
 
 \begin{lstlisting}[language=Haskell]
-import qualified Unbound.Generics.LocallyNameless as Unbound
+module Syntax where
 
--- Term names for our AST
-type TName = Unbound.Name Term
+type TName = Unbound.Name Term -- Term names for our AST
 
-data Term
-= Type -- type of types
-| Var TName -- variables: x
-| Lam (Unbound.Bind TName Term) -- abstractions: λx.a
-| App Term Arg
-| Pi Type (Unbound.Bind TName Type) -- function types: (x : A) -> B
-| Ann Term Type -- "ascription" or "annotated terms": (a: A)
-deriving (Show, Generic)
+type TCName = String -- type constructor names
 
-data Arg = Arg {unArg :: Term}
-  deriving (Show, Generic, Unbound.Alpha, Unbound.Subst Term)
+type DCName = String -- data constructor names
 
 -- because types and terms are the same in dependent typing,
 -- we'll alias them
 type Type = Term
 
-data Decl
-  = TypeSig TName Type -- a : A
-  | Def TName Term     -- a = b
-  deriving (Show)
+data Term
+       = Type -- type of types
+       | Var TName -- variables: x
+       | Lam (Unbound.Bind TName Term) -- abstractions: λx.a
+       | App Term Term -- application: f x
+       | Pi Type (Unbound.Bind TName Type) -- function types: (x : A) -> B
+       | Ann Term Type -- "ascription" or "annotated terms": (a: A)
+       -- Data-type related terms
+       | DCon DCName [Term] -- Just True
+       | TCon TCName [Term] -- Maybe Bool
+       | Case Term [Match] -- case analysis  `case a of matches`
+       -- Proof related terms
+       | TyEq Type Type -- equality type: (plus 0 n) = n
+       | Refl -- equality evidence: refl is of type x = x
+       | Subst Term Term
+       deriving (Generic)
 
--- a file
-data Module = Module
-  { declarations :: [Decl]
-  }
-  deriving (Show)
+-- Modules
+newtype Module = Module {declarations :: [Decl]}
+       deriving (Show)
+
+-- a "top-level definition" of a module
+data Decl
+       = TypeSig TName Type -- a : A
+       | Def TName Term -- a = b
+       | DataDef TCName Telescope [ConstructorDef] -- data Bool ...
+       deriving (Generic, Unbound.Alpha, Unbound.Subst Term)
+
+-- Data-types
+
+-- a data constructor has a name and a telescope of arguments
+data ConstructorDef = ConstructorDef DCName Telescope
+       deriving (Show, Generic, Unbound.Alpha, Unbound.Subst Term)
+
+newtype Telescope = Telescope [Decl]
+       deriving (Show, Generic, Unbound.Alpha, Unbound.Subst Term)
+
+instance Unbound.Subst Term Term where
+       isvar (Var x) = Just (Unbound.SubstName x)
+       isvar _ = Nothing
+
+instance Unbound.Alpha Term where
+       aeq' ctx (Ann a _) b = Unbound.aeq' ctx a b
+       aeq' ctx a (Ann b _) = Unbound.aeq' ctx a b
+       aeq' ctx a b = (Unbound.gaeq ctx `on` from) a b
+
+-- represents a case alternative
+newtype Match = Match (Unbound.Bind Pattern Term)
+       deriving (Generic)
+       deriving anyclass (Unbound.Alpha, Unbound.Subst Term)
+
+data Pattern
+       = PatCon DCName [Pattern]
+       | PatVar TName
+       deriving (Eq, Generic, Unbound.Alpha, Unbound.Subst Term)
 \end{lstlisting}
 
 \subsection{Type-checking}
@@ -1180,45 +1216,67 @@ We now have some helper functions that can be used to implement the type-checkin
 
 \subsubsection{Equality and weak-head normal form}
 
-The rules for propositional and definitional equality of terms, along with the weak-head normal forms are defined as follows:
+The rules for propositional and definitional equality of terms are defined in the \code{equate} function, which given two terms will check if they are equal or not, if they are not it will throw an error.
+
 \begin{lstlisting}[language=Haskell]
 equate :: Term -> Term -> TcMonad ()
+-- two terms are equal, if they are alpha-equivalent
+-- i.e., by just properly renaming the variables
+-- they are the same term
 equate t1 t2 | aeq t1 t2 = return ()
 equate t1 t2 = do
   nf1 <- whnf t1
   nf2 <- whnf t2
   case (nf1, nf2) of
     (Lam bnd1, Lam bnd2) -> do
+      -- get the body of each lambda
       (_, t1, _, t2) <- unbind2Plus bnd1 bnd2
+      -- lambdas are equal, if their bodies are equal
       equate t1 t2
-    (App a1 a2, App b1 b2) -> do
-      equate a1 b1
-      equate (unArg a2) (unArg b2)
-    (Pi ty1 bnd1, Pi ty2 bnd2) -> do
-      equate ty1 ty2
-      (_, t1, _, t2) <- unbind2Plus bnd1 bnd2
-      equate t1 t2
-    (Type, Type) -> return ()
-    (Var x, Var y) | x == y -> return ()
+    -- application is equal when:
+    -- - both functions are equal and
+    -- - both args are equal
+    (App f1 x1, App f2 x2) -> do
+      equate f1 f2
+      equate x1 x2
+    -- ... rest of the terms ommited for brevity ...
     (_, _) -> err ["Expected", show nf2, "but found", show nf1]
+\end{lstlisting}
 
+
+\begin{definition}[Weak-head normal form]
+       A term is said to be in weak-head normal form, when we apply weak-head normalization, which is when the leftmost, outermost reducible expression is always selected for beta-reduction, and the process is halted as soon as the term begins with something other than a lambda abstraction.~\cite{advancedtapl}
+
+       An unformal idea of weak-head normalization, is that it is a subset of the normal beta-reduction(computation) rules, so that we compute just enough to observe the structure of the term, e.g. when I don't care about the result of \code{factorial 100}, but I do care about its structure, if it is a \code{Nat} or not.
+\end{definition}
+
+As shown in the above code section, we also need a function to calculate the weak-head normal form of a given term, which is defined as follows in the \code{whnf} function:
+
+\begin{lstlisting}[language=Haskell]
 whnf :: Term -> TcMonad Term
--- strangely WHNF-Var has a different implementation
--- than what was provided in the paper
+-- if we're whnf-inf a variable,
 whnf (Var x) = do
+  -- look up its definition in the context
   maybeTm <- lookupDefMaybe x
-  pure (fromMaybe (Var x) maybeTm)
+  case maybeTm of
+    -- and whnf the definition
+    (Just tm) -> whnf tm
+    -- or if there's no definition in the context
+    -- return the variable 
+    _ -> pure (Var x)
+-- if we're whnf-ing an application,
 whnf (App a b) = do
   v <- whnf a
+  -- check the type of the whnf'd function
   case v of
-    -- WHNF-Lam-Beta
+    -- if it is indeed a lambda abstraction
     (Lam bnd) -> do
       (x, a') <- unbind bnd
-      whnf (subst x (unArg b) a')
-    -- WHNF-Lam-Cong
+      -- substitute the argument for the bound variable
+      whnf (subst x b a')
+    -- otherwise, return the application
     _ -> return (App v b)
-whnf (Ann tm _) = return tm
--- WHNF-Type, WHNF-Lam, WHNF-Var, WHNF-Pi
+-- ... rest of the terms ommited for brevity ...
 whnf tm = return tm
 \end{lstlisting}
 
@@ -1253,14 +1311,20 @@ tcType :: Term -> TcMonad ()
 tcType tm = void (checkType tm Type)
 
 tcTerm :: Term -> Maybe Type -> TcMonad Type
+-- Infer-mode
+-- looks up the var type from context
 tcTerm (Var x) Nothing = lookupTy x
-tcTerm Type Nothing = return Type
+-- when we reach an annotation, checks the type of the term
+-- to be the annotated type
 tcTerm (Ann tm ty) Nothing = do
   checkType tm ty
   return ty
 tcTerm (Pi tyA bnd) Nothing = do
   (x, tyB) <- unbind bnd
+  -- check that the argument type is indeed a type
   tcType tyA
+  -- extend the context with x:A, then check
+  -- that the body's return type is indeed a type
   extendCtx (TypeSig x tyA) (tcType tyB)
   return Type
 tcTerm (App t1 t2) Nothing = do
@@ -1272,35 +1336,37 @@ tcTerm (App t1 t2) Nothing = do
         return (x, tyA, tyB)
       ensurePi ty = err ["Expected a function type, but found ", show ty]
   nf1 <- whnf ty1
+  -- checks if the "function term" is indeed a function and
+  -- gets the bounded arg var, the argument and body's type
   (x, tyA, tyB) <- ensurePi nf1
-  checkType (unArg t2) tyA
-  return (subst x (unArg t2) tyB)
+  -- checks that the provided argument t2, has the same type as the
+  -- function's argument type
+  checkType t2 tyA
+  -- returns the function's body type, with the argument substituted
+  return (subst x t2 tyB)
+-- ... rest of the terms ommited for brevity ...
+tcTerm tm Nothing = err ["Must have a type annotation to check ", show tm]
+
+-- Check-mode
 tcTerm (Lam bnd) (Just ty@(Pi tyA bnd')) = do
+  -- verifies that the function's argument type is indeed a type
   tcType tyA
-  -- warning: you can't use unbind two times in a row here,
-  -- because the variables in the type part and the
-  -- term part won't coincide then
+  -- unbinds the function's argument, body and body's return type
   (x, body, _, tyB) <- Unbound.unbind2Plus bnd bnd'
+  -- checks that the function's body has the same type as the
+  -- function's body's return type(provided by the Pi type)
   extendCtx (TypeSig x tyA) (checkType body tyB)
   return ty
-tcTerm (Lam _) (Just nf) =
-  err ["Lambda expression should have a function type, not ", show nf]
+tcTerm (Lam _) (Just nf) = err ["Lambda expression should have a function type, not", show nf]
+-- ... rest of the terms ommited for brevity ...
+-- if there's no specific case for *checking* the type of the term
 tcTerm tm (Just ty) = do
+  -- infer its type
   ty' <- inferType tm
+  -- check if the inferred type is equal to the expected type
   ty `equate` ty'
+  -- return the inferred type
   return ty'
-tcTerm tm Nothing =
-  err ["Must have a type annotation to check ", show tm]
-
--- Create a Def if either side normalizes to a single variable
-def :: Term -> Term -> TcMonad [Decl]
-def t1 t2 = do
-  nf1 <- whnf t1
-  nf2 <- whnf t2
-  case (nf1, nf2) of
-    (Var x, _) -> return [Def x nf2]
-    (_, Var x) -> return [Def x nf1]
-    _ -> return []
 \end{lstlisting}
 
 \section{Examples}
