@@ -1011,7 +1011,18 @@ t = Cons 1 True (Cons 0 False Nil)
 
 \subsubsection{Type-checking}
 
-- type and data constructor applications are checked according to the telescope
+We type-check type and data-type constructor applications according to the telescope and the arguments provided, e.g.:
+
+\begin{piforall}
+-- compares the telescope (A : Type) (n : Nat)
+-- with the arguments provided: Bool, 1
+-- Bool is of type Type, and 1 is of type Nat
+v : Vec Bool 1
+-- compares the telescope (m : Nat) (A : Type) (v : Vec A m)
+-- with the arguments provided: 0, True, Nil
+-- 0 is of type Nat, True is of type A(Bool), and Nil is of type Vec Bool 0
+v = Cons 0 True Nil
+\end{piforall}
 
 \subsection{Pattern-matching}
 
@@ -1019,13 +1030,10 @@ t = Cons 1 True (Cons 0 False Nil)
        \[
               \begin{aligned}
                      t, T ::= & \ ... \\
-                     |        & \ \emph{case}\ t\ \emph{of}\ Case+ & \text{pattern matching of a term}
-              \end{aligned}
-       \]
-       \[
-              \begin{aligned}
+                     |        & \ \emph{case}\ t\ \emph{of}\ Case* & \text{pattern matching of a term} \\
+                     \\
                      Case      ::= & \ Pattern\ \rightarrow\ t \\
-                     Pattern   ::= & \ DConName\ PatVar+ \\
+                     Pattern   ::= & \ DConName\ PatVar* \\
                      |             & \ PatVar   \\
                      PatVar    ::= & \ identifier
               \end{aligned}
@@ -1051,15 +1059,55 @@ plus = λa. λb. case a of {
 
 \subsubsection{Type-checking}
 
-- context extension by pattern variables
-- unification of scrutinee and case
-- check type of body of case
-- exhaustivity check
+To type-check pattern matching cases, we have to:
 
-\section{Code}
+\begin{itemize}
+       \item extend the typing context with the pattern variables, e.g. when we see \code{Succ n' -> body}, we should extend the typing context with \code{n' : Nat} when we type-check the body:
+\begin{piforall}
+n : Nat
+case n of {
+  -- we should know that n' has type Nat,
+  --  according to Nat's data definition
+  Succ n' -> plus n' n',
+  ...
+}
+\end{piforall}
+       \item all cases must conform to the same type, e.g.:
+\begin{piforall}
+nat_to_bool : Nat -> Bool
+nat_to_bool = λn. case n of {
+  -- the type of the body of this case is Bool,
+  -- so the type of the whole case is Bool
+  Zero -> False,
+  -- the same thing with this case
+  Succ n' -> True
+}
+
+-- invalid code would have been:
+-- case n of { Zero -> False, Succ n' -> n' }
+\end{piforall}
+       \item check for exhaustiveness, i.e. we should check that there's no other possible case, otherwise, we should throw an error
+\begin{piforall}
+n : Nat
+-- this case is exhaustive, because it covers all possible cases
+case n of {
+  Zero -> False,
+  Succ n' -> True
+}
+
+-- this case is not exhaustive, because it doesn't cover the case of Zero
+-- case n of {
+--  Succ n' -> True
+-- }
+\end{piforall}
+       \item unify the scrutinee's type(term being matched) with the type of the pattern, e.g. if we're applying a case expression to a \code{n} which is a \code{Nat}, and in the \code{Zero -> body} case, we should replace the type of \code{a} from \code{Nat} to \code{Zero}, in this branch.
+\end{itemize}
+
+
+
+\section{Project's Code}
 
 The project was developed in \emph{Haskell} using the \emph{Unbound} library for variable substitution(\emph{beta reduction}).
-
 \subsection{Terms}
 
 The terms are represent as a data type.

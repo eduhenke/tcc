@@ -2,11 +2,11 @@
 - ~~explain module~~
   - ~~grammar~~
   - ~~type-checking~~
-- explain data types
+- ~~explain data types~~
   - ~~grammar~~
   - ~~pattern matching~~
-    - type-checking
-  - type-checking
+    - ~~type-checking~~
+  - ~~type-checking~~
 - give recursion and data types examples
 - conclusion
 - explain the underlying motive of needing bidirectional(transitivity)
