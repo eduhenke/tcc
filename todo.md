@@ -10,7 +10,7 @@
 - ~~update syntax/terms code~~
 - ~~update equality and whnf rules code~~
 - ~~update type-checking rules code~~
-- give recursion and data types examples
+- ~~give recursion and data types examples~~
 - conclusion
 - explain the underlying motive of needing bidirectional(transitivity)
 

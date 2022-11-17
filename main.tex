@@ -1372,46 +1372,81 @@ tcTerm tm (Just ty) = do
 \section{Examples}
 
 The parsing code will be omitted for the sake of brevity.
-We can now verify that a proof that the logical $and$ operator commutes\footnote{note that to build this proof, definitional equality is needed}:
+We're now going to show some examples of the code in this programming language. First of all we're going to define the \code{Bool}, \code{Nat} and \code{Vec} data types along with \code{Nat}'s \code{plus} function:
 
 \begin{piforall}
-       bool : Type
-       bool = (x : Type) -> x -> x -> x
+data Bool : Type where {
+  False,
+  True
+}
 
-       true : bool
-       true = λx. λy. λz. y
+data Nat : Type where {
+  Zero,
+  Succ of (Nat)
+}
 
-       false : bool
-       false = λx. λy. λz. z
+plus : (a b : Nat) -> Nat
+plus = λa b. case a of {
+  Zero -> b,
+  Succ a' -> Succ (plus a' b)
+}
 
-       cond : bool -> (x:Type) -> x -> x -> x
-       cond = λb. b
+data Vec (A : Type) (n : Nat) : Type where {
+  Nil of [n = 0],
+  Cons of (m : Nat) (A) (Vec A m) [n = Succ m]
+}
 
-       and : Type -> Type -> Type
-       and = λp. λq. (c: Type) -> (p -> q -> c) -> c
+empty_bool_vec : Vec Bool 0
+empty_bool_vec = Nil
 
-       conj : (p: Type) -> (q:Type) -> p -> q -> and p q
-       conj = λp.λq. λx.λy. λc. λf. f x y
-
-       proj1 : (p: Type) -> (q:Type) -> and p q -> p
-       proj1 = λp. λq. λa. a p (λx. λy. x)
-
-       proj2 : (p: Type) -> (q:Type) -> and p q -> q
-       proj2 = λp. λq. λa. a q (λx. λy. y)
-
-       and_commutes : (p:Type) -> (q:Type) -> and p q -> and q p
-       and_commutes = λp. λq. λa. conj q p (proj2 p q a) (proj1 p q a)
+bool_vec : Vec Bool 2
+bool_vec = Cons 1 False (Cons 0 True Nil)
 \end{piforall}
 
-When we run our type-checker, we see that it successfully type-checks the proof.
-However, if we for example, change the type of the $and\_commutes$ to:
+Next, we're showing how to build a map function that works on vectors(note the type of the vectors having the parameterized length, on the map function type, showing dependent-types being used), we're buiding a vector and making a proof(static check) of its value:
 
 \begin{piforall}
-       and_commutes : (p:Type) -> (q:Type) -> and p q -> and p p
+map : (A B : Type) -> (n : Nat) -> (f : (A -> B)) -> Vec A n -> Vec B n
+map = λA B n f v. case v of {
+  Nil -> Nil,
+  Cons n' h t -> Cons n' (f h) (map A B n' f t)
+}
+
+nat_vec : Vec Nat 2
+nat_vec = map Bool Nat 2 (λb. case b of {False -> 10, True -> 20}) bool_vec
+
+-- proof that it is a vector like [10, 20]
+p_nat_vec : nat_vec = (Cons 1 10 (Cons 0 20 Nil))
+p_nat_vec = refl
 \end{piforall}
 
-We get an error from our type-checker:
-\code{Expected Var q but found Var p}
+Another use of dependent-types can be shown with the \code{concat} function, showing the returned vector having the length of the sum of the input vectors:
+
+\begin{piforall}
+concat : (A : Type) -> (m n: Nat) -> Vec A m -> Vec A n -> Vec A (plus m n)
+concat = λA m n a b. case a of {
+  Nil -> b,
+  Cons m' h t -> Cons (plus m' n) h (concat A m' n t b)
+}
+\end{piforall}
+
+The aforementioned \code{head} function can also be written in our language, along with a proof showing that the returned element is indeed the first element of the vector, and a comment stating a impossible term(the \code{head} of an empty vector)): 
+\begin{piforall}
+head : (A : Type) -> (n : Nat) -> Vec A (Succ n) -> A
+head = λA n v. case v of {
+  Cons _ h _ -> h
+}
+
+p_head : (head Nat 1 nat_vec) = 10
+p_head = refl
+
+-- the following lines do not type-check
+-- because when we pass 0 as argument
+-- the length of the expected vec argument is (Succ 0), which
+-- does not match with the length of the actual vector(which is 0)
+-- p_head_empty : (head Bool 0 empty_bool_vec) = False
+-- p_head_empty = refl
+\end{piforall}
 
 \postextual
 \printbibliography{}
