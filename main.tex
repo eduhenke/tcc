@@ -166,8 +166,8 @@
 
 % Listas de "coisas". O * no final faz com que as listas não sejam 
 % incluídas como entratas do sumário (\tableofcontents)
-\listoftables*
-\listofalgorithms*
+% \listoftables*
+% \listofalgorithms*
 \listoffigures*
 \tableofcontents*
 
@@ -427,7 +427,7 @@ We can also annotate various parts of our program that allows this checker(which
 
 \subsection{Extension of the calculus}
 
-Consider this extended version of lambda calculus:
+Consider this extended version of lambda calculus representing the typed extension of the lambda calculus, we'll have a grammar for type construction(being represented by \code{T}, with some examples like \code{Nat} and \code{Nat \fnarrow Bool}), we'll annotate function parameters with their types \code{\lambda x:T. t}, and we'll have a typing context $\Gamma$ to record previous typing associations, as well as some terms of type \code{Nat} and \code{Bool}(\code{0}, \code{true}):
 
 \begin{figure}[H]
        \[
@@ -609,7 +609,7 @@ Like many dependently-typed languages, we'll show the typing rules(Figure~\ref{f
 \end{figure}
 
 The typing rules $T-Var$, $T-Lambda$ and $T-App$ are very similar to those in the simply-typed lambda calculus, but the main difference is that the function type, has now a binder variable for the argument.
-Where before we only had that the type of a function is $T_1 \fnarrow T_2$, now we have that the type of a function\footnote{formally called a \emph{Pi} type} is $(x:T_1) \fnarrow T_2$. That means that the body of the type can depend on the type variable $x$, e.g. the type of a function that inserts a $Bool$ in a length-indexed vector of $Bool$s can be $(n:Nat) \fnarrow Bool \fnarrow Vec\ Bool\ (n+1)$.
+Where before we only had that the type of a function is $T_1 \fnarrow T_2$, now we have that the type of a function\footnote{formally called a \emph{Pi} type} is $(x:T_1) \fnarrow T_2$. That means that the function's return type expression $T_2$ can depend on the function's argument $x$, e.g. the type of a function that inserts a $Bool$ in a length-indexed vector of $Bool$s can be $(n:Nat) \fnarrow Bool \fnarrow Vec\ Bool\ (n+1)$.
 The other rules are explained as follows:
 \begin{itemize}
        \item Rule $T-Pi$, a Pi type $(x:T_1)\fnarrow T_2$ has type $\tylit$ in context $\Gamma$, only if $T_1$ also has type $\tylit$ in context $\Gamma$, and if $T_2$ has type $\tylit$ in the extended context $\Gamma, x:T_1$.
@@ -811,8 +811,8 @@ With those rules we can now successfully type-check the program, because $plus\ 
 
 \chapter{Implementation}
 
-The rules presented on section \ref{dep-types} were developed to allow typing proof trees to be built, however they were not developed with saying \emph{how} these proof trees can be built, i.e. these rules are not syntax-directed, we can not devise a decidable algorithm based on these rules alone.
-% TODO: explain why we can't devise(transitivity)
+The rules presented on section \ref{dep-types} were developed to allow typing proof trees to be built, however they were not developed having in mind \emph{how} these proof trees can be built, i.e. these rules are not syntax-directed, we can not devise a decidable algorithm based on these rules alone.
+The reason for that is because rule $T-Lambda$ is not syntax-directed, it is not clear what is the type of the argument of the function(we extend the context with it, because it is necessary to typecheck the body of the function).
 Because of that we need to revise the existing rules and transform them into syntax-directed rules.
 
 \section{Bidirectional type system}
@@ -886,7 +886,7 @@ We now can develop inference rules that represent the algorithmically-feasible v
 
 \section{Modules}
 
-A module consists of a list of top-level declarations, that are defined once and used throughout the module:
+We'll also introduce the concept of modules and top-level declarations to aid in the development of programs. Where a module consists of a list of declarations that are defined once and used throughout the module:
 
 \begin{figure}[H]
        \[
@@ -915,6 +915,7 @@ To type-check a module we use the \code{checkType} function when we have an asso
 
 \section{Data Types}
 
+We'll also introduce the concept of data types, to aid the programmer in having structured data in their program:
 
 \begin{figure}[H]
        \[
@@ -1110,7 +1111,7 @@ case n of {
 The project was developed in \emph{Haskell} using the \emph{Unbound} library for variable substitution(\emph{beta reduction}).
 \subsection{Terms}
 
-The terms are represent as a data type.
+The syntax of the terms, module and declarations are represented as a data type in \emph{Haskell}:
 
 \begin{lstlisting}[language=Haskell]
 module Syntax where
@@ -1161,15 +1162,6 @@ data ConstructorDef = ConstructorDef DCName Telescope
 
 newtype Telescope = Telescope [Decl]
        deriving (Show, Generic, Unbound.Alpha, Unbound.Subst Term)
-
-instance Unbound.Subst Term Term where
-       isvar (Var x) = Just (Unbound.SubstName x)
-       isvar _ = Nothing
-
-instance Unbound.Alpha Term where
-       aeq' ctx (Ann a _) b = Unbound.aeq' ctx a b
-       aeq' ctx a (Ann b _) = Unbound.aeq' ctx a b
-       aeq' ctx a b = (Unbound.gaeq ctx `on` from) a b
 
 -- represents a case alternative
 newtype Match = Match (Unbound.Bind Pattern Term)
@@ -1447,6 +1439,11 @@ p_head = refl
 -- p_head_empty : (head Bool 0 empty_bool_vec) = False
 -- p_head_empty = refl
 \end{piforall}
+
+\chapter{Conclusion}
+
+In this work we presented a dependently-typed programming language, with a type-checker and a parser, written in Haskell. The language is based on the lambda calculus, and has a simple syntax, with a type system that supports dependent types. The language is not intended to be used in production, but rather as a proof-of-concept of a dependently-typed programming language, and as a way to learn more about dependently-typed programming languages. We believe that the language is simple enough to be used as a starting point for someone interested in learning about dependently-typed programming languages. The language can be found at \url{https://github.com/eduhenke/dep-tt}.
+
 
 \postextual
 \printbibliography{}
