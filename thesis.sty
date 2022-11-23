@@ -1,0 +1,84 @@
+\usepackage[dvipsnames]{xcolor}
+\usepackage[OT1,LGR]{fontenc} % fontes
+% \usepackage[utf8]{inputenc} % UTF-8
+\usepackage{csquotes}
+\usepackage{lipsum} % Gerador de texto
+\usepackage{pdfpages} % Inclui PDF externo (ficha catalográfica)
+\usepackage{syntax} % Usado para gramáticas
+
+% \usepackage[section]{placeins} % So figures do not go to random places
+\usepackage{float}
+
+\usepackage{fontspec}
+\usepackage{trfrac} % inference rules
+\usepackage{amsthm} % add definitions
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+\usepackage{textgreek}
+% \usepackage[utf8]{inputenx}
+% \usepackage[OT1,LGR]{fontenc}% changed the encoding
+
+
+% Usado para mostrar código
+\usepackage{listings}
+\usepackage{lstpi} % pi-forall language
+\usepackage{lsthaskell} % haskell language
+% \usepackage{minted}
+% \newmintinline[mt]{latex}{fontsize=\normalsize}
+% \newmintinline[mft]{latex}{fontsize=\footnotesize}
+% \setminted{fontsize=\small}
+% \setmintedinline{breaklines,breakbytokenanywhere}
+
+\newfontfamily\scpfamily{SourceCodePro}[
+  NFSSFamily=sourcecodepro,
+  Path=./fonts/sourcecodepro/,
+  OpticalSize=14,
+  Scale=MatchLowercase,
+  UprightFont=*-Medium,
+  ItalicFont=*-MediumIt,
+  BoldFont=*-Bold,
+  BoldItalicFont=*-BoldIt,
+  FontFace = {el}{\shapedefault}{*-ExtraLight},
+  FontFace = {el}{it}{*-ExtraLightIt},
+  FontFace = {l}{\shapedefault}{*-Light},
+  FontFace = {l}{it}{*-LightIt},
+  FontFace = {sl}{\shapedefault}{*-Regular},
+  FontFace = {sl}{it}{*-It},
+  FontFace = {m}{\shapedefault}{*-Medium},
+  FontFace = {m}{it}{*-MediumIt},
+  FontFace = {sb}{\shapedefault}{*-Semibold},
+  FontFace = {sb}{it}{*-SemiboldIt},
+  FontFace = {b}{\shapedefault}{*-Bold},
+  FontFace = {b}{it}{*-BoldIt},
+  FontFace = {ub}{\shapedefault}{*-Black},
+  FontFace = {ub}{it}{*-BlackIt},
+]
+\setmonofont{SourceCodePro}
+
+\usepackage[style=abnt]{biblatex}
+\addbibresource{bibliography.bib}
+% \bibliography{bibliography.bib}
+
+% Usado para mostrar comandos latex nesse guia:
+\newcommand{\lacmd}[1]{\texttt{\textbackslash{}#1}}
+\newcommand{\laenv}[1]{\texttt{\textbackslash{}begin\{#1\}...\textbackslash{}end\{#1\}}}
+\newcommand{\laenvi}[2]{\texttt{\textbackslash{}begin\{#1\}[#2]...\textbackslash{}end\{#1\}}}
+
+\newcommand{\code}[1]{\text{\scpfamily\setlength\spaceskip{0.35em}#1}}
+
+\newcommand{\fnarrow}{\rightarrow}
+\newcommand{\evalarrow}{\rightarrow}
+\newcommand{\substarrow}{\mapsto}
+\newcommand{\tylit}{\textbf{Type}}
+\newcommand{\sep}{\begin{center}$\ast$~$\ast$~$\ast$\end{center}}
+\newcommand{\infers}{\Rightarrow}
+\newcommand{\checks}{\Leftarrow}
+
+% changes math display font
+\everymath{\mathtt{\xdef\tmp{\fam\the\fam\relax}\aftergroup\tmp}}
+\everydisplay{\mathtt{\xdef\tmp{\fam\the\fam\relax}\aftergroup\tmp}}

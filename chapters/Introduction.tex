@@ -1,0 +1,130 @@
+\chapter{Introduction}
+
+Software development is a big area, which it is being progressively valued over time.
+However, due to the complexity of maintaining and developing large software systems, \textit{bugs} are frequent.
+Where there is a discrepancy in what the developer expected to happen, with what was written in the software.
+
+Because of this, we can see the importance of being able to guarantee that the software works as we expect, and it is also for this that the semantic analysis part of a language is used, where we can verify if the behavior expected by the developer reflects what was in fact written.
+
+In the semantic analysis phase, the compiler checks if the code written by the developer is in accordance with the problem modeling. One of the most basic mechanisms for this is \emph{types}, which we use to define which variables are of a given set of possible values.
+
+With a simple type system~\cite{tapl}, we can verify that a variable of type \emph{string} cannot receive a value of type \emph{int}.
+
+With a more advanced type system, i.e. with dependent types ~\cite{advancedtapl} we can:
+\begin{itemize}
+
+       \item specify business invariants that will be statically checked in the code, for example:
+       \begin{itemize}
+              \item in a banking system, during a withdrawal operation, the amount withdrawn cannot be greater than the balance from a bank account\footnote{We use a Haskell-style pseudo-code notation to describe this code, explained in more details in \autoref{modules} and in \autoref{dep-types}}:
+             \begin{piforall}
+-- given the account balance, an amount and a proof
+-- that the withdrawn amount is less than the balance
+-- perform the operation
+withdraw_from :
+       (account : Account) ->
+       (amount : Nat) ->
+       (amount <= account.balance) ->
+       Nat
+             \end{piforall}
+             \item in most programs, we can have a list of elements, and we can have a function that returns the first element of the list, but what happens if the list is empty? We can use dependent types to specify that the list cannot be empty\footnote{In this case, the first two parameters are being passed explicitly, which can be cumbersome to the developer's experience, that is why most dependently-typed languages have some \emph{inference} mechanisms, which allows the compiler to infer some parameters being passed, like the element type and length of the vector}:
+             \begin{piforall}
+
+head :
+       -- given any type A
+       (A : Type) ->
+       -- given any number
+       (n : Nat) ->
+       -- given a vector of type A, with length n+1
+       -- (note that this means that even if n is 0,
+       --- succ n, will be 1, and the vector will have
+       -- at least one element, our language
+       -- STATICALLY INVALIDATES  all uses of head on an empty list )
+       Vec A (succ n) ->
+       -- return the first element of the vector
+       A
+
+-- returns the length of the resulting vector as a type
+append : (A : Type) -> (n : Nat) -> (m : Nat) -> Vec A m -> Vec A n -> Vec A (plus m n)
+append = ... -- implementation is ommitted
+             \end{piforall}
+       \end{itemize}
+
+       \item prove properties (and theorems) about the code, because we can encode logical propositions as types~\cite{nlab:propositions-as-types}, and their respective proofs as code (evidence of that type)~\cite{nlab:proofs-as-programs}, e.g. prove that an operation inserting an element into an ordered list does not change the order of the list, or prove that a mathematical relation is associative:
+       \begin{piforall}
+-- proof that addition on Naturals is associative
+-- given any three numbers(m, n, p), we can prove that:
+-- (m + n) + p = m + (n + p)
+plus_assoc : (m n p: Nat) -> ((plus (plus m n) p) = (plus m (plus n p)))
+plus_assoc = -- ... proof is ommitted
+       \end{piforall}
+
+\end{itemize}
+
+\section{Existing work}
+Famous examples of dependently-typed languages are \emph{Agda}~\cite{agda}, \emph{Idris}~\cite{idris}, \emph{Coq}~\cite{coq} and \emph{Lean}~\cite{lean}. Next, we illustrate the use of data types in one language.
+
+\subsection{Data types}
+One example of a Agda program is shown below:
+\begin{piforall}
+data Nat : Set where
+       zero : Nat
+       suc : Nat -> Nat
+
+_+_ : Nat -> Nat -> Nat
+zero + m = m
+suc n + m = suc (n + m)
+\end{piforall}
+
+We have defined a data type \code{Nat} that has two constructors, \code{zero} and \code{suc} of a \code{Nat}, which are used to represent the natural numbers.
+Addition is defined as a function that takes two \code{Nat} and returns a \code{Nat}, by recursively removing the \code{suc} from the first parameter until it reaches \code{zero}.
+
+We will show how a vector and a function to get its first element can be defined in Agda:
+
+\begin{piforall}
+data Vec (A : Set) : Nat -> Set where
+       [] : Vec A zero
+       _::_ : {n : Nat} -> A -> Vec A n -> Vec A (suc n)
+
+head : {A : Set}{n : Nat} -> Vec A (suc n) -> A
+head (x :: xs) = x
+\end{piforall}
+
+We have defined \code{Vec}, which is a \emph{type constructor}, not a type by itself. We need to apply two arguments for it to be a type, the first one is a \emph{type} representing the vector element type and the second one is a \emph{natural number}, representing the vector length. We now have that \code{Vec Nat 3} is a type, and that \code{Vec Nat 2} is also a type, but they are both different from each other.
+
+We have also defined two ways to build \emph{instances} of the \code{Vec A n} type, the first one is the empty vector, which is represented by the \code{[]} constructor, it returns an instance of the type \code{Vec A zero} for any type \code{A}. And the second one is the \code{_::_} constructor, which takes an \emph{implicit parameter} \code{n} representing the length of the vector, an element of type \code{A}, a vector of type \code{Vec A n}, and returns a vector of type \code{Vec A (suc n)}. An example of a vector is \code{5 :: []}, which has type \code{Vec Nat (suc zero)}.
+
+The \code{head} function takes an implicit parameter \code{A} representing the inner type of the vector, another implicit parameter \code{n} representing the length of the vector, a vector of type \code{Vec A (suc n)} and returns an element of type \code{A}. Because the vector is statically guaranteed to not be empty, Agda can check that the only constructor that can generate an element of type \code{Vec A (suc n)}, is the \code{_::_} constructor, with that we can use it to get the first element of the vector.
+
+% TODO: explain and fix unicode
+% \subsection{Proof as code}
+
+% \begin{piforall}
+% +-assoc : forall (m n p : Nat) -> (m + n) + p ≡ m + (n + p)
+% +-assoc zero n p =
+%   begin
+%     (zero + n) + p
+%   ≡⟨⟩
+%     n + p
+%   ≡⟨⟩
+%     zero + (n + p)
+%   ∎
+% +-assoc (suc m) n p =
+%   begin
+%     (suc m + n) + p
+%   ≡⟨⟩
+%     suc (m + n) + p
+%   ≡⟨⟩
+%     suc ((m + n) + p)
+%   ≡⟨ cong suc (+-assoc m n p) ⟩
+%     suc (m + (n + p))
+%   ≡⟨⟩
+%     suc m + (n + p)
+%   ∎
+
+% \end{piforall}
+
+\section{This work}
+
+
+This work aims to design and implement a programming language with such dependent type system. It will provide a deeper understanding of how such languages work behind the scenes.
+As the focus is on the type system, we will present only the type-checker of such language, that will be used to statically verify properties about a program.
