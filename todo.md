@@ -14,10 +14,23 @@
 - ~~explain the underlying motive of needing bidirectional(transitivity)~~
 - ~~conclusion~~
 
+tcc1 comments:
+- ~~(li-yao) expand factorial to informally explain:~~
+  - ~~reduction~~
+  - ~~substitution~~
+- map code to inference rules 
+- formatar melhor o código e explicação sobre ele
+
+alvaro comments:
+- remover comentários de código página e trocar por texto (p. 39)
+  - ou explicar pro leitor que os comentários
+- ~~explicar motivação sobre provas~~
+
 finishing touches:
-- explain diff between terms/values
+- ~~explain diff between terms/values~~
 - future work
 - explain propositional equality
 - explain proofs as types
-- review TCC1 comments
+- ~~review TCC1 comments~~
 - double check
+

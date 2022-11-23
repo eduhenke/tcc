@@ -17,7 +17,7 @@
 \usepackage{pdfpages} % Inclui PDF externo (ficha catalográfica)
 \usepackage{syntax} % Usado para gramáticas
 
-% \usepackage[section]{placeins} % So figures don't go to random places
+% \usepackage[section]{placeins} % So figures do not go to random places
 \usepackage{float}
 
 \usepackage{fontspec}
@@ -28,6 +28,7 @@
 
 
 \usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage{mathtools}
 \usepackage{textgreek}
 % \usepackage[utf8]{inputenx}
@@ -68,6 +69,7 @@
   FontFace = {ub}{\shapedefault}{*-Black},
   FontFace = {ub}{it}{*-BlackIt},
 ]
+\setmonofont{SourceCodePro}
 
 \usepackage[style=abnt]{biblatex}
 \addbibresource{bibliography.bib}
@@ -150,7 +152,7 @@
 
 \begin{resumo}[Resumo]
        O objetivo principal desse projeto é implementar uma linguagem de programação com um sistema de \emph{tipos dependentes}.
-       Extende-se o cálculo \emph{lambda} com \emph{tipos dependentes}, o que possibilita a escrita de programas que não apenas realizam computações, mas também que permite a prova da corretude de seu comportamento.
+       O cálculo \emph{lambda} é expandido com \emph{tipos dependentes}, o que possibilita a escrita de programas que realizam computações e também permitem a prova da corretude de seu comportamento.
 
        \vspace{\baselineskip}
        \textbf{Palavras-chave:} Tipos dependentes, sistema de tipos, cálculo lambda, linguagem de programação, teoria de tipos.
@@ -182,7 +184,7 @@ Software development is a big area, which it is being progressively valued over 
 However, due to the complexity of maintaining and developing large software systems, \textit{bugs} are frequent.
 Where there is a discrepancy in what the developer expected to happen, with what was written in the software.
 
-Because of this, we can see the importance of being able to guarantee that the software works as we expect, and it is also for this that the semantic analysis part of a language is used, where we can verify if the behavior expected by the developer reflects with what was in fact written.
+Because of this, we can see the importance of being able to guarantee that the software works as we expect, and it is also for this that the semantic analysis part of a language is used, where we can verify if the behavior expected by the developer reflects what was in fact written.
 
 In the semantic analysis phase, the compiler checks if the code written by the developer is in accordance with the problem modeling. One of the most basic mechanisms for this is \emph{types}, which we use to define which variables are of a given set of possible values.
 
@@ -190,12 +192,13 @@ With a simple type system~\cite{tapl}, we can verify that a variable of type \em
 
 With a more advanced type system, i.e. with dependent types ~\cite{advancedtapl} we can:
 \begin{itemize}
+
        \item specify business invariants that will be statically checked in the code, for example:
        \begin{itemize}
-              \item in a banking system, during a withdrawal operation, the amount withdrawn cannot be greater than the balance from a bank account:
+              \item in a banking system, during a withdrawal operation, the amount withdrawn cannot be greater than the balance from a bank account\footnote{We use a Haskell-style pseudo-code notation to describe this code, explained in more details in \autoref{modules} and in \autoref{dep-types}}:
              \begin{piforall}
---  given the account balance, a amount and a proof
--- that the amount is less than the balance
+-- given the account balance, an amount and a proof
+-- that the withdrawn amount is less than the balance
 -- perform the operation
 withdraw_from :
        (account : Account) ->
@@ -203,7 +206,7 @@ withdraw_from :
        (amount <= account.balance) ->
        Nat
              \end{piforall}
-             \item in most programs, we can have a list of elements, and we can have a function that returns the first element of the list, but what happens if the list is empty? We can use dependent types to specify that the list cannot be empty\footnote{In this case, the first two parameters are being passed explicitly, which can be cumbersome to the developer's experience, that's why most dependently-typed languages have some \emph{inference} mechanisms, which allows the compiler to infer some parameters being passed, like the element type and length of the vector}:
+             \item in most programs, we can have a list of elements, and we can have a function that returns the first element of the list, but what happens if the list is empty? We can use dependent types to specify that the list cannot be empty\footnote{In this case, the first two parameters are being passed explicitly, which can be cumbersome to the developer's experience, that is why most dependently-typed languages have some \emph{inference} mechanisms, which allows the compiler to infer some parameters being passed, like the element type and length of the vector}:
              \begin{piforall}
 
 head :
@@ -225,11 +228,20 @@ append : (A : Type) -> (n : Nat) -> (m : Nat) -> Vec A m -> Vec A n -> Vec A (pl
 append = ... -- implementation is ommitted
              \end{piforall}
        \end{itemize}
-       \item prove properties (and theorems) about the code (e.g. prove that an operation inserting an element into an ordered list does not change the order of the list).
+
+       \item prove properties (and theorems) about the code, because we can encode logical propositions as types~\cite{nlab:propositions-as-types}, and their respective proofs as code (evidence of that type)~\cite{nlab:proofs-as-programs}, e.g. prove that an operation inserting an element into an ordered list does not change the order of the list, or prove that a mathematical relation is associative:
+       \begin{piforall}
+-- proof that addition on Naturals is associative
+-- given any three numbers(m, n, p), we can prove that:
+-- (m + n) + p = m + (n + p)
+plus_assoc : (m n p: Nat) -> ((plus (plus m n) p) = (plus m (plus n p)))
+plus_assoc = -- ... proof is ommitted
+       \end{piforall}
+
 \end{itemize}
 
 \section{Existing work}
-Famous examples of dependently-typed languages are \emph{Agda}~\cite{agda}, \emph{Idris}~\cite{idris}, \emph{Coq}~\cite{coq} and \emph{Lean}~\cite{lean}.
+Famous examples of dependently-typed languages are \emph{Agda}~\cite{agda}, \emph{Idris}~\cite{idris}, \emph{Coq}~\cite{coq} and \emph{Lean}~\cite{lean}. Next, we illustrate the use of data types in one language.
 
 \subsection{Data types}
 One example of a Agda program is shown below:
@@ -246,7 +258,7 @@ suc n + m = suc (n + m)
 We have defined a data type \code{Nat} that has two constructors, \code{zero} and \code{suc} of a \code{Nat}, which are used to represent the natural numbers.
 Addition is defined as a function that takes two \code{Nat} and returns a \code{Nat}, by recursively removing the \code{suc} from the first parameter until it reaches \code{zero}.
 
-We'll show how a vector and a function to get its first element can be defined in Agda:
+We will show how a vector and a function to get its first element can be defined in Agda:
 
 \begin{piforall}
 data Vec (A : Set) : Nat -> Set where
@@ -257,9 +269,9 @@ head : {A : Set}{n : Nat} -> Vec A (suc n) -> A
 head (x :: xs) = x
 \end{piforall}
 
-We have defined \code{Vec}, which is a \emph{type constructor}, not a type by itself. We need to apply two arguments for it to be a type, the first one is a \emph{type} representing the vector's element's type and the second one is a \emph{natural number}, representing the vector's length. We now have that \code{Vec Nat 3} is a type, and that \code{Vec Nat 2} is also a type, but they are both different from each other.
+We have defined \code{Vec}, which is a \emph{type constructor}, not a type by itself. We need to apply two arguments for it to be a type, the first one is a \emph{type} representing the vector element type and the second one is a \emph{natural number}, representing the vector length. We now have that \code{Vec Nat 3} is a type, and that \code{Vec Nat 2} is also a type, but they are both different from each other.
 
-We have also defined two ways to build \emph{instances} of the \code{Vec A n} type, the first one is the empty vector, which is represented by the \code{[]} constructor, it returns an instance of the type \code{Vec A zero} for any type \code{A}. And the second one is the \code{_::_} constructor, which takes an \emph{implicit parameter} \code{n} representing the length of the vector, a element of type \code{A}, a vector of type \code{Vec A n}, and returns a vector of type \code{Vec A (suc n)}. An example of a vector is \code{5 :: []}, which has type \code{Vec Nat (suc zero)}.
+We have also defined two ways to build \emph{instances} of the \code{Vec A n} type, the first one is the empty vector, which is represented by the \code{[]} constructor, it returns an instance of the type \code{Vec A zero} for any type \code{A}. And the second one is the \code{_::_} constructor, which takes an \emph{implicit parameter} \code{n} representing the length of the vector, an element of type \code{A}, a vector of type \code{Vec A n}, and returns a vector of type \code{Vec A (suc n)}. An example of a vector is \code{5 :: []}, which has type \code{Vec Nat (suc zero)}.
 
 The \code{head} function takes an implicit parameter \code{A} representing the inner type of the vector, another implicit parameter \code{n} representing the length of the vector, a vector of type \code{Vec A (suc n)} and returns an element of type \code{A}. Because the vector is statically guaranteed to not be empty, Agda can check that the only constructor that can generate an element of type \code{Vec A (suc n)}, is the \code{_::_} constructor, with that we can use it to get the first element of the vector.
 
@@ -299,43 +311,55 @@ As the focus is on the type system, we will present only the type-checker of suc
 
 \chapter{Theoretical basis}
 
-To explain how this thesis is implemented we're going to provide some background in lambda calculus, inference rules and some type theories.
+In this chapter, we are going to provide some background in lambda calculus, inference rules and some type theories.
 
 \section{Lambda Calculus}
 
-When we don't have the tool of abstraction, calculations such as of Figure~\ref{fig:sample-calculation} seem complex to follow.
-That's why we can abstract the underlying common concepts and define a function to capture that common abstraction(as defined in Figure~\ref{fig:factorial-def}).
+When we do not have the tool of abstraction, calculations such as the following seem complex to follow:
+\begin{equation*}
+       \code{(2*1) + (7*6*5*4*3*2*1) + (5*4*3*2*1)}
+\end{equation*}
+That is why we can abstract the underlying common concepts and define a function to capture that common abstraction, as defined here:
+\begin{equation*}
+       \code{factorial = $\lambda$n . if n == 0 then 1 else n * (factorial (n - 1))}
+\end{equation*}
+Now we can use the previously defined function\footnote{This concept will be later formalized as "abstraction"} to more concisely define the previously cumbersome calculation, as shown here:
+\begin{equation*}
+       \code{(factorial 2) + (factorial 7) + (factorial 5)}
+\end{equation*}
+Let's calculate the term \code{factorial 2} step-by-step:
+
+\begin{itemize}
+       \item In the first line, we are applying the function \code{factorial} to the argument \code{2} (This will be subsequently defined as application of lambda terms).
+       \item In the second line, we have substituted the parameter \code{n} for \code{2} in the body of the function (This will be subsequently defined as substitution or \emph{beta-reduction}).
+       \item In the third line, we have evaluated the \code{if} expression, resulting in the \emph{false} path.
+       \item Afterwards, we continue doing similar steps until we reach the base case of recursion, the \emph{true} path of the \code{if} expression.
+\end{itemize}
 
 \begin{figure}[H]
        \begin{equation*}
-              \code{(3*2*1) + (7*6*5*4*3*2*1) + (5*4*3*2*1)}
+              \begin{aligned}
+                     &\code{($\lambda$n . if n == 0 then 1 else n * (factorial (n - 1))) 2} \\
+                     &\code{if 2 == 0 then 1 else 2 * (factorial (2 - 1))} \\
+                     &\code{2 * (factorial (2 - 1))} \\
+                     &\code{2 * (factorial 1)} \\
+                     &\code{2 * (1 * (factorial 0))} \\
+                     &\code{2 * (1 * 1)} 
+              \end{aligned}
        \end{equation*}
-       \caption{Calculation of a number}
-       \label{fig:sample-calculation}
+       \caption{Step-by-step calculation of the \code{factorial 2} term}
+       \label{fig:factorial-calc:step-1}
 \end{figure}
 
+We have captured an essential understanding of the calculation, and abstracted it into a concept that we can later reuse.
 
-\begin{figure}[H]
-       \begin{equation*}
-              \code{factorial = $\lambda$n . if n == 0 then 0 else n * (factorial (n - 1))}
-       \end{equation*}
-       \caption{Definition of the factorial function}\label{fig:factorial-def}
-\end{figure}
+Lambda calculus captures the essential mechanisms of a programming language based on a few simple rules (abstraction, application). It was invented by Alonzo Church in the 1920s~\cite{tapl} and it is a \emph{logical calculus} or \emph{formal system}.
 
-Now we can use the previously defined function to more concisely define the previously cumbersome calculation, as shown in Figure~\ref{fig:factorial-calc}.
+\begin{definition}[Term]
+       A \emph{term} is an expression in a given formal language that represents a value or a computation.
+\end{definition}
 
-\begin{figure}[H]
-       \begin{equation*}
-              \code{(factorial 3) + (factorial 7) + (factorial 5)}
-       \end{equation*}
-       \caption{Simplified calculation of a number}
-       \label{fig:factorial-calc}
-\end{figure}
-
-
-We've captured an essential understanding of the calculation, and abstracted it into a concept that we can later reuse.
-
-Lambda calculus captures the essential mechanisms of a programming language based on a few simple rules (abstraction, application). It was invented by Alonzo Church in the 1920s~\cite{tapl} and it is a \emph{logical calculus} or \emph{formal system}, whose terms are generated by the following grammar:
+The terms of the lambda calculus are generated by the following grammar:
 
 \begin{figure}[H]
        \begin{equation*}
@@ -351,36 +375,35 @@ Lambda calculus captures the essential mechanisms of a programming language base
 A few example terms of the above grammar:
 
 \begin{itemize}
-       \item $x$, a simple(unbounded) variable
+       \item $x$, a simple (unbounded) variable
        \item $\lambda x.x$, the identity function
-       \item $\lambda x.\lambda y.x$
+       \item $\lambda x.\lambda y.x$, a function receiving argument $x$, that returns another function receiving argument $y$, that returns $x$
        \item $(\lambda x.x)\ y$, applying $y$ to the identity function
 \end{itemize}
 
 \subsection{Evaluation rules}
+\label{evaluation-rules}
 
 This calculus primary benefit is in its evaluation, or computation.
-For example, let's take the above mentioned term and evaluate it: $(\lambda x.x)\ y$ in one step evaluates to $y$, because we're applying the identity function to the variable $y$.
+For example, let's take the above mentioned term and evaluate it: $(\lambda x.x)\ y$ in one step evaluates to $y$, because we are applying the identity function to the variable $y$.
 But how does that work for all terms? How can we formalize it?
 
 \begin{definition}[Evaluation]
        $a \evalarrow b$, a term $a$ can evaluate to term $b$
 \end{definition}
 
-For that we need inference rules. Inference rules are syntactic transformation rules, i.e. they only need to check the form of the term and with that form they transform the original term to something else. We denote them like this, having the premises\footnote{when we don't need any pre-conditions we simply write nothing above the bar} above the bar and the conclusions/consequent below it:
+For that we need inference rules. Inference rules are syntactic transformation rules, i.e. they only need to check the form of the term and with that form they transform the original term to something else. We denote the inference rules by having the premises\footnote{When we do not need any pre-conditions we simply write nothing above the bar} above the bar and the conclusions/consequent below it, like the following inference rule symbolizing the property that adding zero to a number does not change the number:
 
-\[\trfrac[(Add-Zero)]{a+0}{a}\]
+\[\trfrac[(Add-Zero)]{a \in \mathbb{N}}{a+0 \fnarrow a}\]
 
 \begin{definition}[Value]
-       For a term to be a value, it must have the form of a function, i.e. only terms that follow the following structure are considered to be values: $\lambda x.t$. We denote them as terms beginning with \emph{v}, e.g. $v_1$
+       For a term to be a value, it must have the form of a function, i.e. only terms that are an abstraction ($\lambda x.t$) are considered to be values. For ease of notation, we will use $t$ to denote any term, and $v$ (and its derivatives) to denote values e.g. $v_1$.
 \end{definition}
 \begin{definition}[Substitution]
-       The process of substituting a variable $x$ for another term $y$ in a given term $t$ is denoted by $[x\substarrow y]t$
+       The process of substituting a variable $x$ with another term $y$ in a given term $t$ is denoted by $[x\substarrow y]t$
 \end{definition}
 
-\sep
-
-We'll be denoting the evaluation of a lambda calculus terms using a system of inference rules written below:
+We will be denoting the evaluation of a lambda calculus terms using a system of inference rules written below:
 
 \[
        \trfrac[(E-App1)]
@@ -388,7 +411,7 @@ We'll be denoting the evaluation of a lambda calculus terms using a system of in
        {t_1\ t_2 \evalarrow t_1'\ t_2}
 \]
 
-Given a term $t_1\ t_2$(applying the argument $t_2$ to the function $t_1$), if the term $t_1$ can evaluate to another term $t_1'$, we can rewrite the original term to $t_1'\ t_2$.
+Given a term $t_1\ t_2$ (applying the argument $t_2$ to the function $t_1$), if the term $t_1$ can evaluate to another term $t_1'$, we can rewrite the original term to $t_1'\ t_2$.
 
 
 \[
@@ -405,29 +428,29 @@ Given a term $v_1\ t_2$(applying the argument $t_2$ to a term which is a value $
        {\lambda x.t_{12}\ v_2 \evalarrow [x \substarrow v_2]t_{12}}
 \]
 
-Whenever we have an application and the argument is a value, we can rewrite the original term to the body of the function, while replacing the parameter($x$) to the argument($v_2$).\footnote{This rule is also called a \emph{beta reduction}~\cite{tapl}.}\footnote{Note that we don't have any preconditions for this rule, whenever we \emph{syntactically} have an application whose argument is a value, we can reduce it.}
+Whenever we have an application and the argument is a value, we can rewrite the original term to the body of the function, while replacing the parameter($x$) to the argument($v_2$).\footnote{This rule is also called a \emph{beta reduction}~\cite{tapl}.}\footnote{Note that we do not have any preconditions for this rule, whenever we \emph{syntactically} have an application whose argument is a value, we can reduce it.}
 
 \begin{definition}[Normal form]
        When we have no more evaluation steps to perform, i.e. none of the above rules can be applied, and the resulting term is a \emph{value} we say that the term is in \emph{normal form}. For example the term $\lambda x.x$ is in normal form.
 \end{definition}
 
-At first it does not seem that this simple system can compute the same terms that an ordinary programming language can, but it turns out we can encode numbers, data structures(lists, sets, etc.), \emph{if} expressions~\cite{tapl}.
+At first it does not seem that this simple system can compute the same terms that an ordinary programming language can, but it turns out we can encode numbers, data structures (lists, sets, etc.), \emph{if} expressions~\cite{tapl}.
 It was proved that this model is equivalent to a Turing Machine~\cite{lambda-church}.
 
 \section{Simply-Typed Lambda Calculus}
 
-Up until now, we've only had the notion of evaluation of terms, we're able to define computation steps and an engine can run those for us.
-But without much insight into what \emph{"types"} of terms we're writing we can easily make the underlying evaluation engine try to compute a program that never halts~\cite{tapl}, or if we add to the lambda calculus' rules operations that can only be applied to numbers and feed them with booleans that can also make the engine stuck, i.e. passing a program that can't be computed.
+Up to now, we have only had the notion of evaluation of terms, we are able to define computation steps and an engine can run those for us.
+But without much insight into what \emph{"types"} of terms we are writing we can easily make the underlying evaluation engine try to compute a program that never halts~\cite{tapl}, or if we add to the lambda calculus' rules operations that can only be applied to numbers and feed them with booleans that can also make the engine stuck, i.e. passing a program that cannot be computed.
 
 Those problems can be solved if we somehow inspect the original program before evaluating it, and if desired properties can be derived from only the program specification, checking those properties against the code. One way to do it is by the concept of \emph{types}~\cite{tapl}.
 
-Types allow us to define a set of possible values a term may have during runtime. When we talk about a variable having a type of \code{Nat}(Natural numbers set), it is telling that during runtime that variable can only possess the values \code{0, 1, 2, ...}. When we define a variable of type \code{Bool}, the only possible values in runtime are \code{True, False}.
+Types allow us to define a set of possible values a term may have during runtime. When we talk about a variable having a type of \code{Nat} (Natural numbers set), it is telling that during runtime that variable can only possess the values \code{0, 1, 2, ...}. When we define a variable of type \code{Bool}, the only possible values in runtime are \code{True, False}.
 
-We can also annotate various parts of our program that allows this checker(which we'll call typechecker from now), to verify the correctness of our program.
+We can also annotate various parts of our program that allows this checker(which we will call typechecker from now), to verify the correctness of our program.
 
 \subsection{Extension of the calculus}
 
-Consider this extended version of lambda calculus representing the typed extension of the lambda calculus, we'll have a grammar for type construction(being represented by \code{T}, with some examples like \code{Nat} and \code{Nat \fnarrow Bool}), we'll annotate function parameters with their types \code{\lambda x:T. t}, and we'll have a typing context $\Gamma$ to record previous typing associations, as well as some terms of type \code{Nat} and \code{Bool}(\code{0}, \code{true}):
+Consider this extended version of lambda calculus representing the typed extension of the lambda calculus, we will have a grammar for type construction (being represented by \code{T}, with some examples like \code{Nat} and \code{Nat \fnarrow Bool}), we will annotate function parameters with their types (\code{\lambda x:T. t} where \code{x} is the function parameter, \code{T} is a type and \code{t} is a term), and we will have a typing context $\Gamma$ to record previous typing associations, as well as some terms of type \code{Nat} (\code{0}, \code{succ 0}) and \code{Bool} (\code{true}, \code{false}):
 
 \begin{figure}[H]
        \[
@@ -457,9 +480,10 @@ Consider this extended version of lambda calculus representing the typed extensi
 
 With its evaluation rules as stated in Figure~\ref{fig:ext-lambda-calc-eval-rules}:
 \begin{itemize}
-       \item Rule $E-IfTrue$, whenever we \emph{syntactically} find an if expression, whose condition is $true$, we can evaluate that expression to the first branch(\emph{then}) of the if expression, i.e. $t_2$.
-       \item Rule $E-IfFalse$, whenever we \emph{syntactically} find an if expression, whose condition is $false$, we can evaluate that expression to the second branch(\emph{else}) of the if expression, i.e. $t_3$.
-       \item Rule $E-Succ$, whenever we \emph{syntactically} find a $succ$ expression on a term $t$, we have to check the condition that $t$ evaluates to another term $t'$, if that's the case we can evaluate the $succ\ t$ expression to $succ\ t'$.
+       \item Rules $E-App1$, $E-App2$, $E-AppAbs$, were already defined in \autoref{evaluation-rules}.
+       \item Rule $E-IfTrue$, whenever we \emph{syntactically} find an if expression, whose condition is $true$, we can evaluate that expression to the first branch (\emph{then}) of the if expression, i.e. $t_2$.
+       \item Rule $E-IfFalse$, whenever we \emph{syntactically} find an if expression, whose condition is $false$, we can evaluate that expression to the second branch (\emph{else}) of the if expression, i.e. $t_3$.
+       \item Rule $E-Succ$, whenever we \emph{syntactically} find a $succ$ expression on a term $t$, we have to check the condition that $t$ evaluates to another term $t'$, if that is the case we can evaluate the $succ\ t$ expression to $succ\ t'$.
 \end{itemize}
 
 \begin{figure}[H]
@@ -482,9 +506,9 @@ The typing relation for the \emph{extended} part of the extended lambda calculus
 \begin{itemize}
        \item Rule $T-True$, whenever we \emph{syntactically} find a $true$ term, we can assign it the type $Bool$.
        \item Rule $T-False$, whenever we \emph{syntactically} find a $false$ term, we can assign it the type $Bool$.
-       \item Rule $T-If$, whenever we \emph{syntactically} find an if expression, we need to check the premises that the condition is a $Bool$ term, and the two branches are of the same type. If that's the case, we can assign the if expression the type of the two branches.
+       \item Rule $T-If$, whenever we \emph{syntactically} find an if expression, we need to check the premises that the condition is a $Bool$ term, and the two branches are of the same type. If that is the case, we can assign the if expression the type of the two branches.
        \item Rule $T-Zero$, whenever we \emph{syntactically} find a $0$ term, we can assign it the type $Nat$.
-       \item Rule $T-Succ$, whenever we \emph{syntactically} find a $succ$ expression on a term $t_1$, we have to check the condition that $t_1$ has type $Nat$, if that's the case we can assign the $succ\ t_1$ expression the type $Nat$.
+       \item Rule $T-Succ$, whenever we \emph{syntactically} find a $succ$ expression on a term $t_1$, we have to check the condition that $t_1$ has type $Nat$, if that is the case we can assign the $succ\ t_1$ expression the type $Nat$.
 \end{itemize}
 
 \begin{figure}[H]
@@ -512,19 +536,17 @@ The typing relation for the \emph{extended} part of the extended lambda calculus
        \]
 \end{definition}
 
-Terms that are not well-typed, i.e. cannot be assigned a type given the rules above, for example the term $succ\ true$ won't evaluate to a value\footnote{we call those terms stuck, in a more formal definition, they are terms in normal form(no more evaluation rules apply) who are not  values}.
+Terms that are not well-typed, i.e. cannot be assigned a type given the rules above, for example the term $succ\ true$ will not evaluate to a value\footnote{We call those terms stuck, in a more formal definition, they are terms in normal form(no more evaluation rules apply) who are not values}.
 
-\sep
-
-We've shown above how to check the types of the \emph{extended} part of the extended lambda calculus(e.g. for $true$, $0$, $succ$, etc.), but we haven't shown for the \emph{core} part of the lambda calculus(e.g. for $\lambda x.t$, $t_1\ t_2$, etc.).
+We have shown above how to check the types of the \emph{extended} part of the extended lambda calculus (e.g. for $true$, $0$, $succ$, etc.), but we have not shown for the \emph{core} part of the lambda calculus (e.g. for $\lambda x.t$, $t_1\ t_2$, etc.).
 For that we need the concept of a typing context, which will change the typing rules to include a context to aid in this process.
 
-\begin{definition}{Context}
-       A typing context $\Gamma$ is a sequence of variables and their associated types.
+\begin{definition}[Context]
+       A typing context, denoted by $\Gamma$, is a sequence of variables and their associated types.
        The empty context is written as $\emptyset$.
-       We can extend an existing context $\Gamma$ by adding a new variable with its associated type to it: $\Gamma, x : T$.\footnote{we will assume that each of the variables in this list are distinct from each other, so that there will always be at most one assumption about any variable's type.}
+       We can extend an existing context $\Gamma$ by adding a new variable with its associated type to it: $\Gamma, x : T$.\footnote{We will assume that each of the variables in this list are distinct from each other, so that there will always be at most one assumption about any variable's type.}
 
-       The existing typing rule will change from a two-place relation $x : T$ to a three-place relation $\Gamma \vdash x : T$, meaning that $x$ has type $T$ under the context $\Gamma$, which will provide assumptions to the types of the free variables\footnote{variables that are not bound to any lambda binder} in $x$.
+       The existing typing rule will change from a two-place relation $x : T$ to a three-place relation $\Gamma \vdash x : T$, meaning that $x$ has type $T$ under the context $\Gamma$, which will provide assumptions to the types of the free variables\footnote{Variables that are not bound to any lambda binder} in $x$.
 \end{definition}
 
 The typing rules for the \emph{core} part of the lambda calculus, now written as $\Gamma \vdash t : T$ are defined in Figure~\ref{fig:core-lambda-calc-typing-rules}:
@@ -565,7 +587,7 @@ With that we can now typecheck that the following program is valid:
        \]\caption{Well-typed program typing proof tree}
 \end{figure}
 
-And we can't build a similar proof tree for the following program, because it is invalid:
+And we cannot build a similar proof tree for the following program, because it is invalid:
 
 \begin{figure}[H]
        $$ (\lambda x : Nat . succ\ x)\ true $$
@@ -576,9 +598,9 @@ And we can't build a similar proof tree for the following program, because it is
 
 The simply-typed system provides us some basic tools to define types, but we need to be able to define types for more complex terms.
 
-Dependent types allow types to depend on the terms themselves, i.e. we don't have this stark distinction of types and terms. That allows us greater freedom in specifying types, which are a foundation on which our typechecker can verify the correctness of our code~\cite{advancedtapl}.
+Dependent types allow types to depend on the terms themselves, i.e. we do not have this stark distinction of types and terms. That allows us greater freedom in specifying types, which are a foundation on which our typechecker can verify the correctness of our code~\cite{advancedtapl}.
 
-Like many dependently-typed languages, we'll show the typing rules(Figure~\ref{fig:dep-lambda-calc-typing-rules}) and a grammar(Figure~\ref{fig:dep-lambda-calc-grammar}) with the same \emph{syntax} for the terms and types, however for clarity we'll be using lowercase letters for terms and uppercase letters for their types.
+Like many dependently-typed languages, we will show the typing rules (Figure~\ref{fig:dep-lambda-calc-typing-rules}) and a grammar (Figure~\ref{fig:dep-lambda-calc-grammar}) with the same \emph{syntax} for the terms and types, however for clarity we will be using lowercase letters for terms and uppercase letters for their types.
 
 \begin{figure}[H]
        \[
@@ -609,14 +631,14 @@ Like many dependently-typed languages, we'll show the typing rules(Figure~\ref{f
 \end{figure}
 
 The typing rules $T-Var$, $T-Lambda$ and $T-App$ are very similar to those in the simply-typed lambda calculus, but the main difference is that the function type, has now a binder variable for the argument.
-Where before we only had that the type of a function is $T_1 \fnarrow T_2$, now we have that the type of a function\footnote{formally called a \emph{Pi} type} is $(x:T_1) \fnarrow T_2$. That means that the function's return type expression $T_2$ can depend on the function's argument $x$, e.g. the type of a function that inserts a $Bool$ in a length-indexed vector of $Bool$s can be $(n:Nat) \fnarrow Bool \fnarrow Vec\ Bool\ (n+1)$.
+Where before we only had that the type of a function is $T_1 \fnarrow T_2$, now we have that the type of a function\footnote{Formally called a \emph{Pi} type} is $(x:T_1) \fnarrow T_2$. That means that the function's return type expression $T_2$ can depend on the function's argument $x$, e.g. the type of a function that inserts a $Bool$ in a length-indexed vector of $Bool$s can be $(n:Nat) \fnarrow Bool \fnarrow Vec\ Bool\ (n+1)$.
 The other rules are explained as follows:
 \begin{itemize}
        \item Rule $T-Pi$, a Pi type $(x:T_1)\fnarrow T_2$ has type $\tylit$ in context $\Gamma$, only if $T_1$ also has type $\tylit$ in context $\Gamma$, and if $T_2$ has type $\tylit$ in the extended context $\Gamma, x:T_1$.
        \item Rule $T-Type$, the term $\tylit$ also has type $\tylit$.
 \end{itemize}
 
-We'll add two extensions to our grammar to aid in creating programs:
+We will add two extensions to our grammar to aid in creating programs:
 
 \begin{figure}[H]
        \[
@@ -635,7 +657,6 @@ Which respectively mean:
        \item A name can be assigned to a term, e.g. $id = \lambda x.x$.
 \end{itemize}
 
-\sep
 
 With that we can write this polymorphic identity function program annotated with its type and its associated typing proof tree:
 
@@ -707,7 +728,7 @@ The goal of this project is to derive the typing proof tree automatically.
 
 In languages with dependent types, it is often necessary to equate types that are not merely alpha-equivalent\footnote{alpha-equivalence is the property of two terms being equal are equivalent for all purposes if their only difference is the renaming of bound variables, e.g. $\lambda x.x$ is alpha-equivalent to $\lambda y.y$~\cite{nlab:alpha-equivalence}}. This is because more expressions need to type check in these languages.
 For example, a type of length-indexed vector might be \code{Vec A n}, where \code{A} is the type of the vector's elements, and \code{n} is the length of the vector.
-We could have a safe head operation that would allow us to access the first element of the vector, as long as it isn't empty and a append operation that would allow us to append elements to the vector.
+We could have a safe head operation that would allow us to access the first element of the vector, as long as it is not empty and a append operation that would allow us to append elements to the vector.
 
 \begin{piforall}
        head : (A : Type) -> (n : Nat) -> Vec A (succ n) -> A
@@ -739,7 +760,7 @@ Because the type of v' is \code{Vec Bool (succ 0)} matches exactly what the $hea
 \end{piforall}
 
 
-However the application of \code{head Bool 1 (append Bool 1 1 v' v')}, wouldn't typecheck, observe why:
+However the application of \code{head Bool 1 (append Bool 1 1 v' v')}, would not typecheck, observe why:
 
 \begin{piforall}
        v' : Vec Bool (succ 0)
@@ -752,22 +773,27 @@ However the application of \code{head Bool 1 (append Bool 1 1 v' v')}, wouldn't 
        head Bool : (n : Nat) -> Vec Bool (succ n) -> Bool
        head Bool 1 : Vec Bool (succ 1) -> Bool
 
-       -- would not type check because head expects:
+       -- the term:
+       --   head Bool 1 (append Bool 1 1 v' v')
+       -- would not type check because "head Bool 1" is a function that expects:
        --   (Vec Bool (succ 1))
        -- but we have:
        --   (Vec Bool (plus 1 1))
-       head Bool 1 (append Bool 1 1 v' v') : ???
 \end{piforall}
 
 It seems alpha-equivalence is not enough to type check this program, we need to be able to equate \code{Vec Bool (succ 1)} and \code{Vec Bool (plus 1 1)}. And that seems to require some number of steps of computation to be able to do so.
 Definitional type equality is the tool we need to also equate those types of terms.
 
-\subsubsection{Definition}
+\begin{definition}[Judgement]
+       A judgement is a proposition that is made on a given term. The previously defined \emph{typing rule} is a form of judgement.\cite{nlab:judgment}
+\end{definition}
 
 \begin{definition}[Definitional equality]
        Definitional equality is a judgement of the form: $\Gamma \vdash A = B$.
-       Classically, definitional equality is called intensional equality\footnote{intensional equality is the relation generated by abbreviatory definitions, changes of bound variables and the principle of substituting equals for equals~\cite{nlab:equality}}. However in this paper we'll define it to mean both intensional \textbf{and} computational equality\footnote{computational equality is the relation generated by various reduction rules, e.g. \emph{beta reduction}~\cite{nlab:equality}}~\cite{nlab:equality}.
+       Classically, definitional equality is called intensional equality\footnote{Intensional equality is the relation generated by abbreviatory definitions, changes of bound variables and the principle of substituting equals for equals~\cite{nlab:equality}}. However in this thesis we will define it to mean both intensional \textbf{and} computational equality\footnote{Computational equality is the relation generated by various reduction rules, e.g. \emph{beta reduction}~\cite{nlab:equality}}~\cite{nlab:equality}.
 \end{definition}
+
+\subsubsection{Inference rules}
 
 This judgement is defined by the properties stated in Figure~\ref{fig:def-eq}. Rule $E-Beta$ ensures that beta-equivalence is contained in this judgement, because terms that evaluate to each other should be equal.
 Rules $E-Refl$, $E-Sym$, and $E-Trans$ allows this judgement to be considered an equivalence relation~\cite{oplss}.
@@ -816,10 +842,6 @@ The reason for that is because rule $T-Lambda$ is not syntax-directed, it is not
 Because of that we need to revise the existing rules and transform them into syntax-directed rules.
 
 \section{Bidirectional type system}
-
-\begin{definition}[Judgement]
-       A judgement is a proposition that is made on a given term. The previously defined \emph{typing rule} is a form of judgement.\cite{nlab:judgment}
-\end{definition}
 
 One way to do that is to define a bidirectional type system, which is based on two types of judgements:
 \begin{itemize}
@@ -885,8 +907,9 @@ We now can develop inference rules that represent the algorithmically-feasible v
 \end{figure}
 
 \section{Modules}
+\label{modules}
 
-We'll also introduce the concept of modules and top-level declarations to aid in the development of programs. Where a module consists of a list of declarations that are defined once and used throughout the module:
+We will also introduce the concept of modules and top-level declarations to aid in the development of programs. Where a module consists of a list of declarations that are defined once and used throughout the module:
 
 \begin{figure}[H]
        \[
@@ -899,7 +922,7 @@ We'll also introduce the concept of modules and top-level declarations to aid in
 \end{figure}
 
 
-Here's some examples:
+Here are some examples:
 
 \begin{piforall}
 -- a type signature, linking "id" with that type
@@ -915,7 +938,7 @@ To type-check a module we use the \code{checkType} function when we have an asso
 
 \section{Data Types}
 
-We'll also introduce the concept of data types, to aid the programmer in having structured data in their program:
+We will also introduce the concept of data types, to aid the programmer in having structured data in their program:
 
 \begin{figure}[H]
        \[
@@ -949,7 +972,7 @@ We'll also introduce the concept of data types, to aid the programmer in having 
        \begin{piforall}
               -- notice the scoping behavior of this structure
               (A : Type) (n : Nat) (v : Vec A n)
-              -- here we're showing that the telescope can use both
+              -- here we are showing that the telescope can use both
               -- a type annotation, and a definition, which symbolizes
               -- a constraint being put upon any variable, in this
               -- case, it requires n to be of value Zero
@@ -957,7 +980,7 @@ We'll also introduce the concept of data types, to aid the programmer in having 
        \end{piforall}
 \end{definition}
 
-Here we're showing an example, by first defining some data types, then using it as terms:
+Here we are showing an example, by first defining some data types, then using it as terms:
 
 \begin{piforall}
 data Bool : Type where {
@@ -987,7 +1010,7 @@ t : List Bool
 t = Cons True Nil
 \end{piforall}
 
-Next, we're showing that the telescope can have a constraint on the previous values, with a \emph{Vector} data type:
+Next, we are showing that the telescope can have a constraint on the previous values, with a \emph{Vector} data type:
 
 \begin{piforall}
 data Vec (A : Type) (n : Nat) : Type where {
@@ -1042,7 +1065,7 @@ v = Cons 0 True Nil
        \caption{Data type with pattern matching grammar}
 \end{figure}
 
-Here's some examples of pattern matching:
+Here are some examples of pattern matching:
 
 \begin{piforall}
 not : Bool -> Bool
@@ -1087,7 +1110,7 @@ nat_to_bool = λn. case n of {
 -- invalid code would have been:
 -- case n of { Zero -> False, Succ n' -> n' }
 \end{piforall}
-       \item check for exhaustiveness, i.e. we should check that there's no other possible case, otherwise, we should throw an error
+       \item check for exhaustiveness, i.e. we should check that there is no other possible case, otherwise, we should throw an error
 \begin{piforall}
 n : Nat
 -- this case is exhaustive, because it covers all possible cases
@@ -1096,19 +1119,19 @@ case n of {
   Succ n' -> True
 }
 
--- this case is not exhaustive, because it doesn't cover the case of Zero
+-- this case is not exhaustive, because it does not cover the case of Zero
 -- case n of {
 --  Succ n' -> True
 -- }
 \end{piforall}
-       \item unify the scrutinee's type(term being matched) with the type of the pattern, e.g. if we're applying a case expression to a \code{n} which is a \code{Nat}, and in the \code{Zero -> body} case, we should replace the type of \code{a} from \code{Nat} to \code{Zero}, in this branch.
+       \item unify the scrutinee's type(term being matched) with the type of the pattern, e.g. if we are applying a case expression to a \code{n} which is a \code{Nat}, and in the \code{Zero -> body} case, we should replace the type of \code{a} from \code{Nat} to \code{Zero}, in this branch.
 \end{itemize}
 
 
 
 \section{Project's Code}
 
-The project was developed in \emph{Haskell} using the \emph{Unbound} library for variable substitution(\emph{beta reduction}).
+The project was developed in \emph{Haskell} using the \emph{Unbound} library for variable substitution(\emph{beta reduction}), and was heavily inspired by the \emph{pi-forall}~\cite{oplss} language.
 \subsection{Terms}
 
 The syntax of the terms, module and declarations are represented as a data type in \emph{Haskell}:
@@ -1123,7 +1146,7 @@ type TCName = String -- type constructor names
 type DCName = String -- data constructor names
 
 -- because types and terms are the same in dependent typing,
--- we'll alias them
+-- we will alias them
 type Type = Term
 
 data Term
@@ -1177,7 +1200,7 @@ data Pattern
 \subsection{Type-checking}
 
 \subsubsection{Type-checking monad}
-Instead of using a \code{Maybe} or \code{Either} type to represent the result of type checking, we'll use a monad to encapsulate the behaviour of:
+Instead of using a \code{Maybe} or \code{Either} type to represent the result of type checking, we will use a monad to encapsulate the behaviour of:
 \begin{itemize}
        \item failing to type-check and returning an error message
        \item getting and setting the state of the typing context
@@ -1239,24 +1262,24 @@ equate t1 t2 = do
 \begin{definition}[Weak-head normal form]
        A term is said to be in weak-head normal form, when we apply weak-head normalization, which is when the leftmost, outermost reducible expression is always selected for beta-reduction, and the process is halted as soon as the term begins with something other than a lambda abstraction.~\cite{advancedtapl}
 
-       An unformal idea of weak-head normalization, is that it is a subset of the normal beta-reduction(computation) rules, so that we compute just enough to observe the structure of the term, e.g. when I don't care about the result of \code{factorial 100}, but I do care about its structure, if it is a \code{Nat} or not.
+       An unformal idea of weak-head normalization, is that it is a subset of the normal beta-reduction(computation) rules, so that we compute just enough to observe the structure of the term, e.g. when I do not care about the result of \code{factorial 100}, but I do care about its structure, if it is a \code{Nat} or not.
 \end{definition}
 
 As shown in the above code section, we also need a function to calculate the weak-head normal form of a given term, which is defined as follows in the \code{whnf} function:
 
 \begin{lstlisting}[language=Haskell]
 whnf :: Term -> TcMonad Term
--- if we're whnf-inf a variable,
+-- if we are whnf-inf a variable,
 whnf (Var x) = do
   -- look up its definition in the context
   maybeTm <- lookupDefMaybe x
   case maybeTm of
     -- and whnf the definition
     (Just tm) -> whnf tm
-    -- or if there's no definition in the context
+    -- or if there is no definition in the context
     -- return the variable 
     _ -> pure (Var x)
--- if we're whnf-ing an application,
+-- if we are whnf-ing an application,
 whnf (App a b) = do
   v <- whnf a
   -- check the type of the whnf'd function
@@ -1283,7 +1306,7 @@ inferType :: Term -> TcMonad Type
 checkType :: Term -> Type -> TcMonad ()
 \end{lstlisting}
 
-We'll use a \code{tcTerm} function that will be used to centralize the two judgements. If the second parameter is \code{Nothing}, it will enter into \emph{inference} mode, otherwise it will enter into \emph{type-checking} mode.
+We will use a \code{tcTerm} function that will be used to centralize the two judgements. If the second parameter is \code{Nothing}, it will enter into \emph{inference} mode, otherwise it will enter into \emph{type-checking} mode.
 
 \begin{lstlisting}[language=Haskell]
 inferType :: Term -> TcMonad Type
@@ -1351,7 +1374,7 @@ tcTerm (Lam bnd) (Just ty@(Pi tyA bnd')) = do
   return ty
 tcTerm (Lam _) (Just nf) = err ["Lambda expression should have a function type, not", show nf]
 -- ... rest of the terms ommited for brevity ...
--- if there's no specific case for *checking* the type of the term
+-- if there is no specific case for *checking* the type of the term
 tcTerm tm (Just ty) = do
   -- infer its type
   ty' <- inferType tm
@@ -1364,7 +1387,7 @@ tcTerm tm (Just ty) = do
 \section{Examples}
 
 The parsing code will be omitted for the sake of brevity.
-We're now going to show some examples of the code in this programming language. First of all we're going to define the \code{Bool}, \code{Nat} and \code{Vec} data types along with \code{Nat}'s \code{plus} function:
+We are now going to show some examples of the code in this programming language. First of all we are going to define the \code{Bool}, \code{Nat} and \code{Vec} data types along with \code{Nat}'s \code{plus} function:
 
 \begin{piforall}
 data Bool : Type where {
@@ -1395,7 +1418,7 @@ bool_vec : Vec Bool 2
 bool_vec = Cons 1 False (Cons 0 True Nil)
 \end{piforall}
 
-Next, we're showing how to build a map function that works on vectors(note the type of the vectors having the parameterized length, on the map function type, showing dependent-types being used), we're buiding a vector and making a proof(static check) of its value:
+Next, we are showing how to build a map function that works on vectors(note the type of the vectors having the parameterized length, on the map function type, showing dependent-types being used), we are buiding a vector and making a proof(static check) of its value:
 
 \begin{piforall}
 map : (A B : Type) -> (n : Nat) -> (f : (A -> B)) -> Vec A n -> Vec B n
