@@ -9,13 +9,13 @@ Because of that we need to revise the existing rules and transform them into syn
 One way to do that is to define a bidirectional type system, which is based on two types of judgements:
 \begin{itemize}
        \item \emph{Type inference}, denoted as $\Gamma \vdash x \infers T$ which given a term $x$ and a context $\Gamma$, will \emph{infer}(return) the type of that term.
-             \begin{haskell}
+             \begin{lstlisting}[language=Haskell,numbers=none]
                     inferType :: Context -> Term -> Maybe Type
-             \end{haskell}
+             \end{lstlisting}
        \item \emph{Type checking}, denoted as $\Gamma \vdash x \checks T$ which given a term $x$, a context $\Gamma$ and a type $T$, will \emph{check} that the term is of the given type.
-             \begin{haskell}
+             \begin{lstlisting}[language=Haskell,numbers=none]
                     checkType :: Context -> Term -> Type -> Bool
-             \end{haskell}
+             \end{lstlisting}
 \end{itemize}
 
 We now can develop inference rules that represent the algorithmically-feasible version of the \ref{dep-types} rules. Both types of judgements will be used, the type inference rules can use the type checking rules, and vice versa.
@@ -297,15 +297,14 @@ case n of {
 The project was developed in \emph{Haskell} using the \emph{Unbound} library for variable substitution (\emph{beta reduction}), and was heavily inspired by the \emph{pi-forall}~\cite{oplss} language.
 \subsection{Terms}
 
-The syntax of the terms, module and declarations are represented as a data type in \emph{Haskell}:
+The syntax of the terms, module and declarations are represented as a data type in \emph{Haskell}.
+Here we have the data type for the terms, which is a recursive data type, as well as the data type for the types, which is simply an alias to the term data type:
 
 \begin{lstlisting}[language=Haskell]
 module Syntax where
 
 type TName = Unbound.Name Term -- Term names for our AST
-
 type TCName = String -- type constructor names
-
 type DCName = String -- data constructor names
 
 -- because types and terms are the same in dependent typing,
@@ -327,31 +326,28 @@ data Term
        | TyEq Type Type -- equality type: (plus 0 n) = n
        | Refl -- equality evidence: refl is of type x = x
        | Subst Term Term
-       deriving (Generic)
-
--- Modules
+\end{lstlisting}
+Next, we have the data type for the modules and top-level declarations:
+\begin{lstlisting}[language=Haskell]
 newtype Module = Module {declarations :: [Decl]}
-       deriving (Show)
 
 -- a "top-level definition" of a module
 data Decl
        = TypeSig TName Type -- a : A
        | Def TName Term -- a = b
        | DataDef TCName Telescope [ConstructorDef] -- data Bool ...
-       deriving (Generic, Unbound.Alpha, Unbound.Subst Term)
-
--- Data-types
-
+\end{lstlisting}
+And finally, we have the data type for data types and pattern-matching constructs:
+\begin{lstlisting}[language=Haskell]
 -- a data constructor has a name and a telescope of arguments
 data ConstructorDef = ConstructorDef DCName Telescope
-       deriving (Show, Generic, Unbound.Alpha, Unbound.Subst Term)
+       deriving (Unbound.Alpha, Unbound.Subst Term)
 
 newtype Telescope = Telescope [Decl]
-       deriving (Show, Generic, Unbound.Alpha, Unbound.Subst Term)
+       deriving (Unbound.Alpha, Unbound.Subst Term)
 
 -- represents a case alternative
 newtype Match = Match (Unbound.Bind Pattern Term)
-       deriving (Generic)
        deriving anyclass (Unbound.Alpha, Unbound.Subst Term)
 
 data Pattern
@@ -371,6 +367,8 @@ Instead of using a \code{Maybe} or \code{Either} type to represent the result of
 \end{itemize}
 
 \begin{lstlisting}[language=Haskell]
+module Environment where
+
 import Control.Monad
 import Control.Monad.Except (ExceptT)
 import Control.Monad.Reader (ReaderT)
@@ -392,6 +390,17 @@ lookupTy :: TName -> TcMonad Type
 
 We now have some helper functions that can be used to implement the type-checking rules, e.g. given a name of a variable we can use \code{lookupTy} to get its type, if it fails to find that variable in the context, it will stop the type-checking process and issue an error.
 
+Also the two judgements' signatures will change to:
+
+\begin{lstlisting}[language=Haskell]
+-- given a term return its type (or an error message)
+inferType :: Term -> TcMonad Type
+-- given a term and a type, check if the term is of the given type
+-- if it is, return (), otherwise an error message
+checkType :: Term -> Type -> TcMonad ()
+\end{lstlisting}
+
+
 \subsubsection{Equality and weak-head normal form}
 
 The rules for propositional and definitional equality of terms are defined in the \code{equate} function, which given two terms will check if they are equal or not, if they are not it will throw an error.
@@ -411,16 +420,17 @@ equate t1 t2 = do
       (_, t1, _, t2) <- unbind2Plus bnd1 bnd2
       -- lambdas are equal, if their bodies are equal
       equate t1 t2
-    -- application is equal when:
-    -- - both functions are equal and
-    -- - both args are equal
     (App f1 x1, App f2 x2) -> do
       equate f1 f2
       equate x1 x2
-    -- ... rest of the terms ommited for brevity ...
+-- ... rest of the terms ommited for brevity ...
     (_, _) -> err ["Expected", show nf2, "but found", show nf1]
 \end{lstlisting}
 
+\begin{itemize}
+       \item From line 10 to 14, we are checking that a lambda is equal to another lambda if their bodies are equal, according to rule E-Lam in \autoref{fig:def-eq}
+       \item From line 15 to 17, we are checking that an application is equal to another application if their function and argument are equal, according to rule E-App in \autoref{fig:def-eq}
+\end{itemize}
 
 \begin{definition}[Weak-head normal form]
        A term is said to be in weak-head normal form, when we apply weak-head normalization, which is when the leftmost, outermost reducible expression is always selected for beta-reduction, and the process is halted as soon as the term begins with something other than a lambda abstraction.~\cite{advancedtapl}
@@ -459,19 +469,16 @@ whnf tm = return tm
 \end{lstlisting}
 
 \subsubsection{Type-checking rules}
-Also the two judgements' signatures will change to:
+
+In this section we will implement the type-checking rules for the terms and types of our language, which are defined in \autoref{fig:dep-lambda-type-inference}.
+
+We will use a \code{tcTerm} function that will be used to centralize the two judgements (\code{inferType} and \code{checkType}). If the second parameter is \code{Nothing}, it will enter into \emph{inference} mode, otherwise it will enter into \emph{type-checking} mode.
+
+Here we will just define the \code{inferType} and the \code{checkType} function:
 
 \begin{lstlisting}[language=Haskell]
--- given a term return its type (or an error message)
-inferType :: Term -> TcMonad Type
--- given a term and a type, check if the term is of the given type
--- if it is, return (), otherwise an error message
-checkType :: Term -> Type -> TcMonad ()
-\end{lstlisting}
+module Typechecker where
 
-We will use a \code{tcTerm} function that will be used to centralize the two judgements. If the second parameter is \code{Nothing}, it will enter into \emph{inference} mode, otherwise it will enter into \emph{type-checking} mode.
-
-\begin{lstlisting}[language=Haskell]
 inferType :: Term -> TcMonad Type
 inferType t = tcTerm t Nothing
 
@@ -484,25 +491,24 @@ checkType tm ty = do
   nf <- whnf ty
   ty' <- tcTerm tm (Just nf)
 
--- | Make sure that the term is a type (i.e. has type 'Type')
+-- Make sure that the term is a type (i.e. has type 'Type')
 tcType :: Term -> TcMonad ()
 tcType tm = void (checkType tm Type)
+\end{lstlisting}
 
+Next, we will define the \code{tcTerm} function, which will be used to implement the type-checking rules:
+
+\newpage
+\begin{lstlisting}[language=Haskell]
 tcTerm :: Term -> Maybe Type -> TcMonad Type
 -- Infer-mode
--- looks up the var type from context
 tcTerm (Var x) Nothing = lookupTy x
--- when we reach an annotation, checks the type of the term
--- to be the annotated type
 tcTerm (Ann tm ty) Nothing = do
   checkType tm ty
   return ty
 tcTerm (Pi tyA bnd) Nothing = do
   (x, tyB) <- unbind bnd
-  -- check that the argument type is indeed a type
   tcType tyA
-  -- extend the context with x:A, then check
-  -- that the body's return type is indeed a type
   extendCtx (TypeSig x tyA) (tcType tyB)
   return Type
 tcTerm (App t1 t2) Nothing = do
@@ -514,39 +520,45 @@ tcTerm (App t1 t2) Nothing = do
         return (x, tyA, tyB)
       ensurePi ty = err ["Expected a function type, but found ", show ty]
   nf1 <- whnf ty1
-  -- checks if the "function term" is indeed a function and
-  -- gets the bounded arg var, the argument and body's type
   (x, tyA, tyB) <- ensurePi nf1
-  -- checks that the provided argument t2, has the same type as the
-  -- function's argument type
   checkType t2 tyA
-  -- returns the function's body type, with the argument substituted
   return (subst x t2 tyB)
--- ... rest of the terms ommited for brevity ...
+-- ... rest of the cases ommited for brevity ...
 tcTerm tm Nothing = err ["Must have a type annotation to check ", show tm]
 
 -- Check-mode
 tcTerm (Lam bnd) (Just ty@(Pi tyA bnd')) = do
-  -- verifies that the function's argument type is indeed a type
   tcType tyA
-  -- unbinds the function's argument, body and body's return type
   (x, body, _, tyB) <- Unbound.unbind2Plus bnd bnd'
-  -- checks that the function's body has the same type as the
-  -- function's body's return type (provided by the Pi type)
   extendCtx (TypeSig x tyA) (checkType body tyB)
   return ty
-tcTerm (Lam _) (Just nf) = err ["Lambda expression should have a function type, not", show nf]
--- ... rest of the terms ommited for brevity ...
+tcTerm (Lam _) (Just nf) = err ["Lambda expression should be a function"]
+-- ... rest of the cases ommited for brevity ...
 -- if there is no specific case for *checking* the type of the term
 tcTerm tm (Just ty) = do
-  -- infer its type
   ty' <- inferType tm
-  -- check if the inferred type is equal to the expected type
   ty `equate` ty'
-  -- return the inferred type
   return ty'
 \end{lstlisting}
 
+\newpage
+
+We can describe the type-checking rules as follows:
+\begin{itemize}
+       \item In inference mode:
+              \begin{itemize}
+                     \item At line 3, we are \emph{inferring} the type of a variable, by consulting it from the type-checking monad's context, according to the $I-Var$ rule in \autoref{fig:dep-lambda-type-inference}.
+                     \item In the function case at line 7, we are \emph{inferring} the type of a dependent function type (pi type), according to the $I-Pi$ rule in \autoref{fig:dep-lambda-type-inference}. We check that the argument type is indeed a type, and then we extend the context with the argument type and check that the body's return type is indeed a type. If both checks are successful, we return the type \code{Type}.
+                     \item In the function case at line 12, we are \emph{inferring} the type of an application, according to the $I-App-Simple$ rule as stated in \autoref{fig:dep-lambda-type-inference}. We check that the function term is indeed a function type (pi type), and then we check that the provided argument has the same type as the function's argument type. Finally, we return the function's body type, with the argument substituted.
+              \end{itemize}
+       \item While in type-checking mode, when we have the information of what type this term needs to have:
+              \begin{itemize}
+                     \item In the function case at line 28, we are \emph{checking} the type of a lambda expression to be a dependent function type, according to the $C-Lambda$ rule in \autoref{fig:dep-lambda-type-inference}. We check that the function's argument type is indeed a type, and then check that the lambda's body has the same type as the Pi type body return type. If both checks are successful, we return the checked Pi type.
+                     \item In the last case, we are \emph{checking} the type of a term to be equal to a given type, according to the $C-Infer-Simple$ rule in \autoref{fig:dep-lambda-type-inference}. We infer the type of the term, and then check if it is equal to the expected type (using the previously defined \emph{equality among types} function). If both checks are successful, we return the inferred type.
+              \end{itemize}
+\end{itemize}
+
+\newpage
 \section{Examples}
 
 The parsing code will be omitted for the sake of brevity.

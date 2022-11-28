@@ -1,0 +1,48 @@
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{xparse}
+\usetikzlibrary{calc}
+\usetikzlibrary{decorations.pathreplacing}
+
+\newcommand{\tikzmark}[1]{%
+  \tikz[overlay,remember picture,baseline] \node [anchor=base] (#1) {};}
+
+\newcommand*{\BracektStubSize}{0.5em}%
+\NewDocumentCommand\LeftBracket{%
+    O{}% #1 = draw options
+    O{0pt}% #2 = shift to be applied (optional, for use with nested braces)
+    m% #3 = top \tikzmark name
+    m% #4 = bottom \tikzmark name
+    m% #5 = node text
+}{%
+    \begin{tikzpicture}[overlay,remember picture,baseline]
+        \coordinate (Top Start of Bracket) at ([shift={(#2-15pt,5pt)}]#3.north east);
+        \coordinate (Bottom Start of Bracket) at ([shift={(#2-15pt,2pt)}]#4.south east);
+        \draw[thick, #1] 
+            (Top Start of Bracket) --++(-\BracektStubSize,0) 
+                |-(Bottom Start of Bracket) ;
+
+        \node[xshift=-5pt, align=left, anchor=east, #1]
+            at ($(Bottom Start of Bracket)!0.5!(Top Start of Bracket)$) {#5};
+    \end{tikzpicture}    
+}
+
+\newcounter{mymark}
+\newcommand{\MarkMe}[2][]{\stepcounter{mymark}%
+\tikzmark{mark-\number\value{mymark}}%
+    \begin{tikzpicture}[overlay,remember picture]
+        \def\pv##1{\pgfkeysvalueof{/tikz/my mark/##1}}
+        \draw[/tikz/my mark/arrow,line width=\pv{line width},red,shorten >=\pv{halo},
+        shorten <=\pv{halo},
+        preaction={draw,line width=\pv{line width}+2*\pv{halo},white,/tikz/my mark/arrow}] 
+        ([yshift=2pt]pic cs:mark-\number\value{mymark}) 
+        --++ (\pv{x},\pv{y}) node[above,/tikz/my mark/mark node]{#2};
+    \end{tikzpicture}
+}
+\tikzset{my mark/.cd,
+mark node/.style={fill=red!30,draw},
+line width/.initial=1pt,
+halo/.initial=0.5pt,
+x/.initial=1cm,
+y/.initial=1cm,
+arrow/.style={latex-}}

@@ -1,4 +1,4 @@
-20/80:
+~~20/80~~:
 - ~~explain module~~
   - ~~grammar~~
   - ~~type-checking~~
@@ -14,16 +14,16 @@
 - ~~explain the underlying motive of needing bidirectional(transitivity)~~
 - ~~conclusion~~
 
-tcc1 comments:
+~~tcc1 comments~~:
 - ~~(li-yao) expand factorial to informally explain:~~
   - ~~reduction~~
   - ~~substitution~~
-- map code to inference rules 
-- formatar melhor o código e explicação sobre ele
+- ~~map code to inference rules~~
+- ~~formatar melhor o código e explicação sobre ele~~
 
 alvaro comments:
-- remover comentários de código página e trocar por texto (p. 39)
-  - ou explicar pro leitor que os comentários
+- ~~remover comentários de código página e trocar por texto (p. 39)~~
+  - ~~ou explicar pro leitor que os comentários~~
 - ~~explicar motivação sobre provas~~
 - adicionar appendix do código
 
