@@ -52,7 +52,7 @@ append = ... -- implementation is ommitted
        \item prove properties (and theorems) about the code, because we can encode logical propositions as types~\cite{nlab:propositions-as-types}, and their respective proofs as code (evidence of that type)~\cite{nlab:proofs-as-programs}, e.g. prove that an operation inserting an element into an ordered list does not change the order of the list, or prove that a mathematical relation is associative:
        \begin{piforall}
 -- proof that addition on Naturals is associative
--- given any three numbers(m, n, p), we can prove that:
+-- given any three numbers (m, n, p), we can prove that:
 -- (m + n) + p = m + (n + p)
 plus_assoc : (m n p: Nat) -> ((plus (plus m n) p) = (plus m (plus n p)))
 plus_assoc = -- ... proof is ommitted

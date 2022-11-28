@@ -1,7 +1,7 @@
 \chapter{Implementation}
 
 The rules presented on section \ref{dep-types} were developed to allow typing proof trees to be built, however they were not developed having in mind \emph{how} these proof trees can be built, i.e. these rules are not syntax-directed, we can not devise a decidable algorithm based on these rules alone.
-The reason for that is because rule $T-Lambda$ is not syntax-directed, it is not clear what is the type of the argument of the function(we extend the context with it, because it is necessary to typecheck the body of the function).
+The reason for that is because rule $T-Lambda$ is not syntax-directed, it is not clear what is the type of the argument of the function (we extend the context with it, because it is necessary to typecheck the body of the function).
 Because of that we need to revise the existing rules and transform them into syntax-directed rules.
 
 \section{Bidirectional type system}
@@ -154,22 +154,22 @@ data Bool : Type where {
 data Nat : Type where {
        Zero,
        -- Succ is a data type constructor with
-       -- a Telescope of one argument(another Nat number)
+       -- a Telescope of one argument (another Nat number)
        Succ of (Nat)
 }
 
 data List (A : Type) : Type where {
        Nil,
        -- Cons is a data type constructor with
-       -- a Telescope of two arguments(element of A and a List of A)
+       -- a Telescope of two arguments (element of A and a List of A)
        Cons of (A) (List A)
 }
 
 -- t is annotated with a type, constructed by applying a
--- list of arguments(Bool) to the type constructor(List)
+-- list of arguments (Bool) to the type constructor (List)
 t : List Bool
--- t is defined using a data type constructor(Cons) by applying
--- a list of arguments(True, Nil) to it
+-- t is defined using a data type constructor (Cons) by applying
+-- a list of arguments (True, Nil) to it
 t = Cons True Nil
 \end{piforall}
 
@@ -178,10 +178,10 @@ Next, we are showing that the telescope can have a constraint on the previous va
 \begin{piforall}
 data Vec (A : Type) (n : Nat) : Type where {
   -- Nil is a data type constructor with
-  -- a constraint that n(provided by the type) must be zero
+  -- a constraint that n (provided by the type) must be zero
   Nil of [n = Zero],
   -- Cons is a data type constructor with a Telescope of 
-  -- three arguments(Nat m, element of A, and a Vec of A with length m)
+  -- three arguments (Nat m, element of A, and a Vec of A with length m)
   -- and one constraint that the Vector built by Cons,
   -- must have length m+1, m being the underlying vector
   -- which this Cons was built upon
@@ -189,10 +189,10 @@ data Vec (A : Type) (n : Nat) : Type where {
 }
 
 -- t is annotated with a type, constructed by applying a
--- list of arguments(Bool) to the type constructor(List)
+-- list of arguments (Bool) to the type constructor (List)
 t : Vec Bool 2
--- t is defined using a data type constructor(Cons) by applying
--- a list of arguments(True, Nil) to it
+-- t is defined using a data type constructor (Cons) by applying
+-- a list of arguments (True, Nil) to it
 t = Cons 1 True (Cons 0 False Nil)
 \end{piforall}
 
@@ -207,7 +207,7 @@ We type-check type and data-type constructor applications according to the teles
 v : Vec Bool 1
 -- compares the telescope (m : Nat) (A : Type) (v : Vec A m)
 -- with the arguments provided: 0, True, Nil
--- 0 is of type Nat, True is of type A(Bool), and Nil is of type Vec Bool 0
+-- 0 is of type Nat, True is of type A (Bool), and Nil is of type Vec Bool 0
 v = Cons 0 True Nil
 \end{piforall}
 
@@ -287,14 +287,14 @@ case n of {
 --     Succ n' -> True
 --   }
 \end{piforall}
-       \item unify the scrutinee's type(term being matched) with the type of the pattern, e.g. if we are applying a case expression to a \code{n} which is a \code{Nat}, and in the \code{Zero -> body} case, we should replace the type of \code{a} from \code{Nat} to \code{Zero}, in this branch.
+       \item unify the scrutinee's type (term being matched) with the type of the pattern, e.g. if we are applying a case expression to a \code{n} which is a \code{Nat}, and in the \code{Zero -> body} case, we should replace the type of \code{a} from \code{Nat} to \code{Zero}, in this branch.
 \end{itemize}
 
 
 
 \section{Project's Code}
 
-The project was developed in \emph{Haskell} using the \emph{Unbound} library for variable substitution(\emph{beta reduction}), and was heavily inspired by the \emph{pi-forall}~\cite{oplss} language.
+The project was developed in \emph{Haskell} using the \emph{Unbound} library for variable substitution (\emph{beta reduction}), and was heavily inspired by the \emph{pi-forall}~\cite{oplss} language.
 \subsection{Terms}
 
 The syntax of the terms, module and declarations are represented as a data type in \emph{Haskell}:
@@ -425,7 +425,7 @@ equate t1 t2 = do
 \begin{definition}[Weak-head normal form]
        A term is said to be in weak-head normal form, when we apply weak-head normalization, which is when the leftmost, outermost reducible expression is always selected for beta-reduction, and the process is halted as soon as the term begins with something other than a lambda abstraction.~\cite{advancedtapl}
 
-       An unformal idea of weak-head normalization, is that it is a subset of the normal beta-reduction(computation) rules, so that we compute just enough to observe the structure of the term, e.g. when I do not care about the result of \code{factorial 100}, but I do care about its structure, if it is a \code{Nat} or not.
+       An unformal idea of weak-head normalization, is that it is a subset of the normal beta-reduction (computation) rules, so that we compute just enough to observe the structure of the term, e.g. when I do not care about the result of \code{factorial 100}, but I do care about its structure, if it is a \code{Nat} or not.
 \end{definition}
 
 As shown in the above code section, we also need a function to calculate the weak-head normal form of a given term, which is defined as follows in the \code{whnf} function:
@@ -462,7 +462,7 @@ whnf tm = return tm
 Also the two judgements' signatures will change to:
 
 \begin{lstlisting}[language=Haskell]
--- given a term return its type(or an error message)
+-- given a term return its type (or an error message)
 inferType :: Term -> TcMonad Type
 -- given a term and a type, check if the term is of the given type
 -- if it is, return (), otherwise an error message
@@ -532,7 +532,7 @@ tcTerm (Lam bnd) (Just ty@(Pi tyA bnd')) = do
   -- unbinds the function's argument, body and body's return type
   (x, body, _, tyB) <- Unbound.unbind2Plus bnd bnd'
   -- checks that the function's body has the same type as the
-  -- function's body's return type(provided by the Pi type)
+  -- function's body's return type (provided by the Pi type)
   extendCtx (TypeSig x tyA) (checkType body tyB)
   return ty
 tcTerm (Lam _) (Just nf) = err ["Lambda expression should have a function type, not", show nf]
@@ -581,7 +581,7 @@ bool_vec : Vec Bool 2
 bool_vec = Cons 1 False (Cons 0 True Nil)
 \end{piforall}
 
-Next, we are showing how to build a map function that works on vectors(note the type of the vectors having the parameterized length, on the map function type, showing dependent-types being used), we are buiding a vector and making a proof(static check) of its value:
+Next, we are showing how to build a map function that works on vectors (note the type of the vectors having the parameterized length, on the map function type, showing dependent-types being used), we are buiding a vector and making a proof (static check) of its value:
 
 \begin{piforall}
 map : (A B : Type) -> (n : Nat) -> (f : (A -> B)) -> Vec A n -> Vec B n
@@ -608,7 +608,7 @@ concat = λA m n a b. case a of {
 }
 \end{piforall}
 
-The aforementioned \code{head} function can also be written in our language, along with a proof showing that the returned element is indeed the first element of the vector, and a comment stating a impossible term(the \code{head} of an empty vector)): 
+The aforementioned \code{head} function can also be written in our language, along with a proof showing that the returned element is indeed the first element of the vector, and a comment stating a impossible term (the \code{head} of an empty vector)): 
 \begin{piforall}
 head : (A : Type) -> (n : Nat) -> Vec A (Succ n) -> A
 head = λA n v. case v of {
@@ -621,7 +621,7 @@ p_head = refl
 -- the following lines do not type-check
 -- because when we pass 0 as argument
 -- the length of the expected vec argument is (Succ 0), which
--- does not match with the length of the actual vector(which is 0)
+-- does not match with the length of the actual vector (which is 0)
 -- p_head_empty : (head Bool 0 empty_bool_vec) = False
 -- p_head_empty = refl
 \end{piforall}

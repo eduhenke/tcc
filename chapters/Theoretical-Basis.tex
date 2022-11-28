@@ -117,7 +117,7 @@ Given a term $v_1\ t_2$(applying the argument $t_2$ to a term which is a value $
        {\lambda x.t_{12}\ v_2 \evalarrow [x \substarrow v_2]t_{12}}
 \]
 
-Whenever we have an application and the argument is a value, we can rewrite the original term to the body of the function, while replacing the parameter($x$) to the argument($v_2$).\footnote{This rule is also called a \emph{beta reduction}~\cite{tapl}.}\footnote{Note that we do not have any preconditions for this rule, whenever we \emph{syntactically} have an application whose argument is a value, we can reduce it.}
+Whenever we have an application and the argument is a value, we can rewrite the original term to the body of the function, while replacing the parameter ($x$) to the argument ($v_2$).\footnote{This rule is also called a \emph{beta reduction}~\cite{tapl}.}\footnote{Note that we do not have any preconditions for this rule, whenever we \emph{syntactically} have an application whose argument is a value, we can reduce it.}
 
 \begin{definition}[Normal form]
        When we have no more evaluation steps to perform, i.e. none of the above rules can be applied, and the resulting term is a \emph{value} we say that the term is in \emph{normal form}. For example the term $\lambda x.x$ is in normal form.
@@ -135,7 +135,7 @@ Those problems can be solved if we somehow inspect the original program before e
 
 Types allow us to define a set of possible values a term may have during runtime. When we talk about a variable having a type of \code{Nat} (Natural numbers set), it is telling that during runtime that variable can only possess the values \code{0, 1, 2, ...}. When we define a variable of type \code{Bool}, the only possible values in runtime are \code{True, False}.
 
-We can also annotate various parts of our program that allows this checker(which we will call typechecker from now), to verify the correctness of our program.
+We can also annotate various parts of our program that allows this checker (which we will call typechecker from now), to verify the correctness of our program.
 
 \subsection{Extension of the calculus}
 
@@ -225,7 +225,7 @@ The typing relation for the \emph{extended} part of the extended lambda calculus
        \]
 \end{definition}
 
-Terms that are not well-typed, i.e. cannot be assigned a type given the rules above, for example the term $succ\ true$ will not evaluate to a value\footnote{We call those terms stuck, in a more formal definition, they are terms in normal form(no more evaluation rules apply) who are not values}.
+Terms that are not well-typed, i.e. cannot be assigned a type given the rules above, for example the term $succ\ true$ will not evaluate to a value\footnote{We call those terms stuck, in a more formal definition, they are terms in normal form (no more evaluation rules apply) who are not values}.
 
 We have shown above how to check the types of the \emph{extended} part of the extended lambda calculus (e.g. for $true$, $0$, $succ$, etc.), but we have not shown for the \emph{core} part of the lambda calculus (e.g. for $\lambda x.t$, $t_1\ t_2$, etc.).
 For that we need the concept of a typing context, which will change the typing rules to include a context to aid in this process.
