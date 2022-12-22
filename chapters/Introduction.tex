@@ -1,19 +1,15 @@
 \chapter{Introduction}
 
 Software development is a big area, which it is being progressively valued over time.
-However, due to the complexity of maintaining and developing large software systems, \textit{bugs} are frequent.
-Where there is a discrepancy in what the developer expected to happen, with what was written in the software.
+However, due to the complexity of maintaining and developing large software systems, \textit{bugs} are frequent, where there is a discrepancy in what the developer expected to happen, with what was written in the software.
+Because of this, we can see the importance of being able to guarantee that the software works as we expect, and it is also for this reason that the semantic analysis part of a language is used, where we can verify if the behavior expected by the developer reflects what was in fact written.
 
-Because of this, we can see the importance of being able to guarantee that the software works as we expect, and it is also for this that the semantic analysis part of a language is used, where we can verify if the behavior expected by the developer reflects what was in fact written.
-
-In the semantic analysis phase, the compiler checks if the code written by the developer is in accordance with the problem modeling. One of the most basic mechanisms for this is \emph{types}, which we use to define which variables are of a given set of possible values.
-
-With a simple type system~\cite{tapl}, we can verify that a variable of type \emph{string} cannot receive a value of type \emph{int}.
+In the semantic analysis phase, the compiler checks if the code written by the developer is in accordance with the problem modeling. One of the most basic mechanisms for this is \emph{types}, which we use to define which variables are of a given set of possible values. With a simple type system~\cite{tapl}, we can verify that a variable of type \emph{string} cannot receive a value of type \emph{int}.
 
 With a more advanced type system, i.e. with dependent types ~\cite{advancedtapl} we can:
 \begin{itemize}
 
-       \item specify business invariants that will be statically checked in the code, for example:
+       \item specify invariants (rules that must hold) that will be statically checked in the code, for example:
        \begin{itemize}
               \item in a banking system, during a withdrawal operation, the amount withdrawn cannot be greater than the balance from a bank account\footnote{We use a Haskell-style pseudo-code notation to describe this code, explained in more details in \autoref{modules} and in \autoref{dep-types}}:
              \begin{piforall}
@@ -61,10 +57,11 @@ plus_assoc = -- ... proof is ommitted
 \end{itemize}
 
 \section{Existing work}
-Famous examples of dependently-typed languages are \emph{Agda}~\cite{agda}, \emph{Idris}~\cite{idris}, \emph{Coq}~\cite{coq} and \emph{Lean}~\cite{lean}. Next, we illustrate the use of data types in one language.
+
+Some of the most well-known dependently-typed languages are \emph{Agda}~\cite{agda}, \emph{Idris}~\cite{idris}, \emph{Coq}~\cite{coq} and \emph{Lean}~\cite{lean}, all of which allow for static verification and the ability to prove arbitrary properties about the code. These languages are based on different underlying type theories, which shape the foundations of their type systems and the capacity to specify and prove theorems. Additionally, the focus of these languages can vary; for instance, \emph{Agda} is more geared towards programming, while \emph{Coq} has a stronger emphasis on theorem proving. In the following section, we demonstrate the use of data types in the \emph{Agda} programming language.
 
 \subsection{Data types}
-One example of a Agda program is shown below:
+One example of a \emph{Agda} program is shown below:
 \begin{piforall}
 data Nat : Set where
        zero : Nat
@@ -95,36 +92,16 @@ We have also defined two ways to build \emph{instances} of the \code{Vec A n} ty
 
 The \code{head} function takes an implicit parameter \code{A} representing the inner type of the vector, another implicit parameter \code{n} representing the length of the vector, a vector of type \code{Vec A (suc n)} and returns an element of type \code{A}. Because the vector is statically guaranteed to not be empty, Agda can check that the only constructor that can generate an element of type \code{Vec A (suc n)}, is the \code{_::_} constructor, with that we can use it to get the first element of the vector.
 
-% TODO: explain and fix unicode
-% \subsection{Proof as code}
+\section{Objectives}
 
-% \begin{piforall}
-% +-assoc : forall (m n p : Nat) -> (m + n) + p ≡ m + (n + p)
-% +-assoc zero n p =
-%   begin
-%     (zero + n) + p
-%   ≡⟨⟩
-%     n + p
-%   ≡⟨⟩
-%     zero + (n + p)
-%   ∎
-% +-assoc (suc m) n p =
-%   begin
-%     (suc m + n) + p
-%   ≡⟨⟩
-%     suc (m + n) + p
-%   ≡⟨⟩
-%     suc ((m + n) + p)
-%   ≡⟨ cong suc (+-assoc m n p) ⟩
-%     suc (m + (n + p))
-%   ≡⟨⟩
-%     suc m + (n + p)
-%   ∎
+The general objective of this thesis is to examine the potential advantages of utilizing advanced type systems, such as dependent types, in software development, through the implementation of a dependently-typed programming language. We will provide a deeper understanding of how such languages work behind the scenes, and how they can be used to statically verify properties about a program.
 
-% \end{piforall}
+To support this general objective, we will pursue the following specific objectives:
 
-\section{This work}
+\begin{itemize}
+\item Investigate existing work on dependently-typed programming languages and advanced type systems
+\item Develop a dependently-typed programming language as a proof-of-concept implementation. As the focus is on the type system, we will present only the type-checker of such language.
+\item Use the language to encode business invariants and demonstrate the ability to prove properties about the code, including through the use of static type checking and automated theorem proving.
+\end{itemize}
 
-
-This work aims to design and implement a programming language with such dependent type system. It will provide a deeper understanding of how such languages work behind the scenes.
-As the focus is on the type system, we will present only the type-checker of such language, that will be used to statically verify properties about a program.
+We believe that achieving these objectives will provide valuable insights into the potential of using advanced type systems in software development.

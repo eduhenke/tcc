@@ -6,7 +6,7 @@ Because of that we need to revise the existing rules and transform them into syn
 
 \section{Bidirectional type system}
 
-One way to do that is to define a bidirectional type system, which is based on two types of judgements:
+One way to automatically derive proof trees for a given program is to define a bidirectional type system, which is based on two types of judgements:
 \begin{itemize}
        \item \emph{Type inference}, denoted as $\Gamma \vdash x \infers T$ which given a term $x$ and a context $\Gamma$, will \emph{infer}(return) the type of that term.
              \begin{lstlisting}[language=Haskell,numbers=none]
@@ -18,7 +18,7 @@ One way to do that is to define a bidirectional type system, which is based on t
              \end{lstlisting}
 \end{itemize}
 
-We now can develop inference rules that represent the algorithmically-feasible version of the \ref{dep-types} rules. Both types of judgements will be used, the type inference rules can use the type checking rules, and vice versa.
+We now can develop inference rules that represent the algorithmically-feasible version of the \autoref{dep-types} rules. Both types of judgements will be used, the type inference rules can use the type checking rules, and vice versa.
 
 \begin{figure}[H]
        $$
@@ -561,7 +561,7 @@ We can describe the type-checking rules as follows:
 \newpage
 \section{Examples}
 
-The parsing code will be omitted for the sake of brevity (but can be found in the \href{https://github.com/eduhenke/dep-tt/blob/main/src/Parser.hs}{Parser.hs} file, in the implementation's repository). We are now going to show some examples of the code in this programming language. First of all we are going to define the \code{Bool}, \code{Nat} and \code{Vec} data types along with \code{Nat}'s \code{plus} function:
+The parsing code will be omitted for the sake of brevity (but can be found in the \href{https://github.com/eduhenke/dep-tt/blob/main/src/Parser.hs}{Parser.hs} file, source code in~\autoref{appendix:project-repository}). We are now going to show some examples of the code in this programming language. First of all we are going to define the \code{Bool}, \code{Nat} and \code{Vec} data types along with \code{Nat}'s \code{plus} function:
 
 \begin{piforall}
 data Bool : Type where {
@@ -636,3 +636,13 @@ p_head = refl
 -- p_head_empty : (head Bool 0 empty_bool_vec) = False
 -- p_head_empty = refl
 \end{piforall}
+
+\section{Evaluation}
+
+In this chapter, we presented the implementation of a proof-of-concept programming language with dependent types. We demonstrated the use of dependent types to specify invariants and prove properties about code, and showed how these capabilities can improve code reliability and maintainability. We provided several examples of code written in our language, including functions that manipulate vectors and perform basic operations like mapping and concatenation.
+
+Overall, our implementation illustrates the potential benefits of advanced type systems like dependent types, and demonstrates their ability to enable static checking of invariants and the encoding of logical propositions as types and proofs as code. While our proof-of-concept language is not intended for production use, it serves as a useful case study for exploring the capabilities and potential of dependent types in software development.
+
+\subsection{Results}
+
+In comparing our proof-of-concept language to \emph{Agda}, a well-established dependently-typed language, it is evident that our language lacks many of the advanced features and capabilities of \emph{Agda}. Our language does not support features like \emph{universes}, which allow for the organization and hierarchy of types and their associated terms, and \emph{implicit parameters}, which allow for the implicit passing of arguments in function definitions. Additionally, our language does not support \emph{coinductive types}, which allow for the definition of infinite data structures and the representation of infinite processes. These features are present in \emph{Agda} and can be useful for a wide range of applications. It is clear that our language is limited in its capabilities and may not be suitable for all types of projects that may benefit from the use of dependent types.

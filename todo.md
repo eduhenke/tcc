@@ -21,11 +21,11 @@
 - ~~map code to inference rules~~
 - ~~formatar melhor o código e explicação sobre ele~~
 
-alvaro comments:
+~~alvaro comments~~:
 - ~~remover comentários de código página e trocar por texto (p. 39)~~
   - ~~ou explicar pro leitor que os comentários~~
 - ~~explicar motivação sobre provas~~
-- adicionar appendix do código
+- ~~adicionar appendix do código~~
 
 finishing touches:
 - ~~explain diff between terms/values~~

@@ -16,7 +16,7 @@ Now we can use the previously defined function\footnote{This concept will be lat
 \begin{equation*}
        \code{(factorial 2) + (factorial 7) + (factorial 5)}
 \end{equation*}
-Let's calculate the term \code{factorial 2} step-by-step:
+Let's calculate the term \code{factorial 2} step-by-step (\autoref{fig:factorial-calc:step-1}):
 
 \begin{itemize}
        \item In the first line, we are applying the function \code{factorial} to the argument \code{2} (This will be subsequently defined as application of lambda terms).
@@ -377,39 +377,6 @@ $$
 
 The goal of this project is to derive the typing proof tree automatically.
 
-% TODO: explain proofs as types
-
-% Using the existing grammar we can describe more advanced programs, that can be used to prove arbitrary mathematical/logical properties like the commutativity of the $and$ operator:
-
-% $$
-%        \begin{aligned}
-%               and\            & :\ Type\ \fnarrow\ Type\ \fnarrow\ Type                                                     \\
-%               and\            & =\ \lambda p.\ \lambda q.\ (c:\ Type)\ \fnarrow\ (p\ \fnarrow\ q\ \fnarrow\ c)\ \fnarrow\ c \\
-%               \\
-%               conj\           & :\ (p:\ Type)\ \fnarrow\ (q:Type)\ \fnarrow\ p\ \fnarrow\ q\ \fnarrow\ and\ p\ q            \\
-%               conj\           & =\ \lambda p.\lambda q.\ \lambda x.\lambda y.\ \lambda c.\ \lambda f.\ f\ x\ y              \\
-%               \\
-%               proj1\          & :\ (p:\ Type)\ \fnarrow\ (q:Type)\ \fnarrow\ and\ p\ q\ \fnarrow\ p                         \\
-%               proj1\          & =\ \lambda p.\ \lambda q.\ \lambda a.\ a\ p\ (\lambda x.\lambda y.x)                        \\
-%               \\
-%               proj2\          & :\ (p:\ Type)\ \fnarrow\ (q:Type)\ \fnarrow\ and\ p\ q\ \fnarrow\ q                         \\
-%               proj2\          & =\ \lambda p.\ \lambda q.\ \lambda a.\ a\ q\ (\lambda x.\lambda y.y)                        \\
-%               \\
-%               and\_commutes\  & :\ (p:Type)\ \fnarrow\ (q:Type)\ \fnarrow\ and\ p\ q\ \fnarrow\ and\ q\ p                   \\
-%               and\_commutes\  & =\ \lambda p.\ \lambda q.\ \lambda a.\ conj\ q\ p\ (proj2\ p\ q\ a)\ (proj1\ p\ q\ a)
-%        \end{aligned}
-% $$
-
-% TODO: maybe finish this proof tree?
-% $$
-%        \trfrac[(T-Lambda)]
-%        {
-%               \Gamma, p:\tylit \vdash \lambda q.\ \lambda a.\ conj\ q\ p\ (proj2\ p\ q\ a)\ (proj1\ p\ q\ a) : (q:Type)\ \fnarrow\ and\ p\ q\ \fnarrow\ and\ q\ p
-%               \qquad
-%               \trfrac[(T-Type)]{}{\Gamma \vdash \tylit : \tylit}
-%        }
-%        {\lambda p.\ \lambda q.\ \lambda a.\ conj\ q\ p\ (proj2\ p\ q\ a)\ (proj1\ p\ q\ a) : (p:Type)\ \fnarrow\ (q:Type)\ \fnarrow\ and\ p\ q\ \fnarrow\ and\ q\ p}
-% $$
 
 \subsection{Definitional Type Equality}
 
@@ -519,7 +486,3 @@ Rules $E-Refl$, $E-Sym$, and $E-Trans$ allows this judgement to be considered an
 \end{figure}
 
 With those rules we can now successfully type-check the program, because $plus\ 1\ 1$ will evaluate to $succ\ 1$.
-
-% \subsection{Propositional Type Equality}
-% \subsubsection{Motivation}
-% \subsubsection{Definition}
