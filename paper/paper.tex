@@ -196,30 +196,6 @@ To support this general objective, we will pursue the following specific objecti
 \item Use the language to encode business invariants and demonstrate the ability to prove properties about the code, including through the use of static type checking and automated theorem proving.
 \end{itemize}
 
-$\Gamma$.
-\begin{equation*}
-       \code{(2*1) + (7*6*5*4*3*2*1) + (5*4*3*2*1)}
-\end{equation*}
-
-\begin{figure}[H]
-       \begin{equation*}
-              \begin{aligned}
-                     &\code{($\lambda$n . if n == 0 then 1 else n * (factorial (n - 1))) 2} \\
-                     &\code{if 2 == 0 then 1 else 2 * (factorial (2 - 1))} \\
-                     &\code{2 * (factorial (2 - 1))} \\
-                     &\code{2 * (factorial 1)} \\
-                     &\code{2 * (1 * (factorial 0))} \\
-                     &\code{2 * (1 * 1)} 
-              \end{aligned}
-       \end{equation*}
-       \caption{Step-by-step calculation of the \code{factorial 2} term}
-       \label{fig:factorial-calc:step-1}
-\end{figure}
-
-% \code{Nat \fnarrow Bool}
-% \code{\lambda x:T. t}
-
-
 We believe that achieving these objectives will provide valuable insights into the potential of using advanced type systems in software development.
 
 \section{Theoretical Basis}
@@ -794,7 +770,7 @@ data Term
        | Var TName -- variables: x
        | Lam (Unbound.Bind TName Term) -- abstractions: λx.a
        | App Term Term -- application: f x
-       | Pi Type (Unbound.Bind TName Type) -- function types: (x : A) -> B
+       | Pi Type (Unbound.Bind TName Type) -- fn types: (x : A) -> B
        | Ann Term Type -- "ascription" or "annotated terms": (a: A)
        -- Data-type related terms
        | DCon DCName [Term] -- Just True
