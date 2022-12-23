@@ -110,7 +110,11 @@
 \author{Eduardo Henke\inst{1}}
 
 
-\address{CTC -- Universidade Federal de Santa Catarina (UFSC)}
+\address{
+       Departamento de Informática e Estatística --\\
+       Universidade Federal de Santa Catarina (UFSC)\\
+       \email{eduardo.henke@grad.ufsc.br}
+}
 
 \begin{document} 
 
@@ -350,10 +354,20 @@ Like many dependently-typed languages, we will show the typing rules (~\autoref{
        \label{fig:dep-lambda-calc-typing-rules}
 \end{figure}
 
-The typing rules $T-Var$, $T-Lambda$ and $T-App$ are very similar to those in the simply-typed lambda calculus, but the main difference is that the function type, has now a binder variable for the argument.
-Where before we only had that the type of a function is $T_1 \fnarrow T_2$, now we have that the type of a function\footnote{Formally called a \emph{Pi} type} is $(x:T_1) \fnarrow T_2$. That means that the function's return type expression $T_2$ can depend on the function's argument $x$, e.g. the type of a function that inserts a $Bool$ in a length-indexed vector of $Bool$s can be $(n:Nat) \fnarrow Bool \fnarrow Vec\ Bool\ (n+1)$.
-The other rules are explained as follows:
+\begin{definition}[Context]
+       A typing context, denoted by $\Gamma$, is a sequence of variables and their associated types.
+       The empty context is written as $\emptyset$.
+       We can extend an existing context $\Gamma$ by adding a new variable with its associated type to it: $\Gamma, x : T$.\footnote{We will assume that each of the variables in this list are distinct from each other, so that there will always be at most one assumption about any variable's type.}
+
+       The existing typing rule will change from a two-place relation $x : T$ to a three-place relation $\Gamma \vdash x : T$, meaning that $x$ has type $T$ under the context $\Gamma$, which will provide assumptions to the types of the free variables\footnote{Variables that are not bound to any lambda binder} in $x$.
+\end{definition}
+
+Also, where before we only had that the type of a function is $T_1 \fnarrow T_2$, now we have that the type of a function\footnote{Formally called a \emph{Pi} type} is $(x:T_1) \fnarrow T_2$. That means that the function's return type expression $T_2$ can depend on the function's argument $x$, e.g. the type of a function that inserts a $Bool$ in a length-indexed vector of $Bool$s can be $(n:Nat) \fnarrow Bool \fnarrow Vec\ Bool\ (n+1)$.
+The rules are explained as follows:
 \begin{itemize}
+       \item Rule $T-Var$, to check if a variable $x$ has type $T$ in the context $\Gamma$, we check if $x:T$ is in $\Gamma$.
+       \item Rule $T-Lambda$, a lambda expression $\lambda x.t_2$ has type $(x:T_1) \fnarrow T_2$ in context $\Gamma$, if when we extend the context $\Gamma$ to include the variable $x$ with type $T_1$, we can check if $t_2$ has type $T_2$ in the extended context, and also if $T_1$ is indeed a type.
+       \item Rule $T-App$, a function application $t_1\ t_2$ has type $T_{12}$(with the $x$ variable substituted by the $t_2$ parameter) in context $\Gamma$, if we can check that $t_1$ has type $(x:T_{11}) \fnarrow T_{12}$ in the context $\Gamma$, and if we can check that $t_2$ has type $T_{11}$ in the context $\Gamma$.
        \item Rule $T-Pi$, a Pi type $(x:T_1)\fnarrow T_2$ has type $\tylit$ in context $\Gamma$, only if $T_1$ also has type $\tylit$ in context $\Gamma$, and if $T_2$ has type $\tylit$ in the extended context $\Gamma, x:T_1$.
        \item Rule $T-Type$, the term $\tylit$ also has type $\tylit$.
 \end{itemize}
@@ -453,8 +467,6 @@ Rules $E-Refl$, $E-Sym$, and $E-Trans$ allows this judgement to be considered an
        \caption{Inference rules for the definitional type equality judgement}
        \label{fig:def-eq}
 \end{figure}
-
-With those rules we can now successfully type-check the program, because $plus\ 1\ 1$ will evaluate to $succ\ 1$.
 
 \section{Implementation}
 
